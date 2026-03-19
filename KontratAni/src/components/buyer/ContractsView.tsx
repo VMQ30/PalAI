@@ -4,16 +4,29 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react'; // 👈 added useEffect
 import { Lock, CheckCircle2, ArrowLeft, Sprout, Droplets, Sun, Truck, Package } from 'lucide-react';
 import ContractsIndex from './contracts/ContractsIndex';
 
 const statusOrder: CropStatus[] = ['pending', 'seeds_planted', 'fertilized', 'growing', 'ready_for_harvest', 'harvested', 'delivered'];
 
 export function ContractsView() {
-  const { contracts, selectedContractId, selectContract, fundContract } = useAppStore();
+  const { contracts, selectedContractId, selectContract, fundContract, updateCropStatus } = useAppStore(); // 👈 added updateCropStatus
   const [escrowModal, setEscrowModal] = useState(false);
   const [escrowSuccess, setEscrowSuccess] = useState(false);
+
+  // 👇 Listen for crop status updates from farmer's mobile tab
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key !== CROP_STATUS_KEY || !e.newValue) return;
+      try {
+        const { contractId, cropStatus } = JSON.parse(e.newValue) as { contractId: string; cropStatus: CropStatus; ts: number };
+        updateCropStatus(contractId, cropStatus);
+      } catch {}
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [updateCropStatus]);
 
   const contract = contracts.find((c) => c.id === selectedContractId);
 
