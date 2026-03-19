@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnimatePresence } from "framer-motion";
 import Auth from "./pages/Auth.tsx"; 
 import NotFound from "./pages/NotFound.tsx";
-import BuyerLayout from "@/components/buyer/buyerlayout.tsx";
+import BuyerLayout from "./components/buyer/BuyerLayout.tsx";
 
 // placeholder muna itech connect connect nalang 
 const CoopDashboard = () => <div className="p-10 text-2xl font-bold">🤝 Cooperative Dashboard (Coming Soon)</div>;
