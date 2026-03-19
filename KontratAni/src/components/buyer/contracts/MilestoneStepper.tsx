@@ -69,12 +69,14 @@ const MilestoneStepper = () => {
                     i + 1
                   )}
                 </div>
-                {i < steps.length - 1 && (
+                {i < steps.length - 1 ? (
                   <div
                     className={`h-1 flex-1 rounded-full ${
                       completed ? "bg-primary" : "bg-progress-track"
                     }`}
                   />
+                ) : (
+                  <div className="h-1 flex-1" />
                 )}
               </div>
               <span
