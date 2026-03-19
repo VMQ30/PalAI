@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { Lock, CheckCircle2, ArrowLeft, Sprout, Droplets, Sun, Truck, Package } from 'lucide-react';
+import ContractsIndex from './contracts/ContractsIndex';
 
 const timelineSteps: { status: CropStatus; label: string; icon: React.ElementType }[] = [
   { status: 'pending', label: 'Contract Signed', icon: Package },
@@ -86,44 +87,8 @@ export function ContractsView() {
           </Badge>
         )}
       </div>
-
-      {/* Traceability Timeline */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Traceability Timeline</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative space-y-0">
-            {timelineSteps.map((step, i) => {
-              const Icon = step.icon;
-              const done = i <= currentStepIdx;
-              const current = i === currentStepIdx;
-              return (
-                <div key={step.status} className="flex gap-4">
-                  <div className="flex flex-col items-center">
-                    <motion.div
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: current ? 1.1 : 1 }}
-                      className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors ${
-                        done ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                    </motion.div>
-                    {i < timelineSteps.length - 1 && (
-                      <div className={`w-0.5 h-8 ${i < currentStepIdx ? 'bg-primary' : 'bg-border'}`} />
-                    )}
-                  </div>
-                  <div className="pb-8">
-                    <p className={`text-sm font-medium ${done ? 'text-foreground' : 'text-muted-foreground'}`}>{step.label}</p>
-                    {current && <p className="text-xs text-primary font-medium">Current Status</p>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+      
+      <ContractsIndex/>
 
       {/* Cooperative Details */}
       {contract.matchedCooperative && (
