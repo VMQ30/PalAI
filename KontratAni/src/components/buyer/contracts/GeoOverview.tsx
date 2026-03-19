@@ -32,13 +32,17 @@ const GeoOverview = () => {
   //mockup plot
   const plotGeoJSON = useMemo<FeatureCollection | null>(() => {
     if (!contract || !contract.matchedCooperative) return null;
+
+    const shiftedCenter = {
+      longitude: PH_CENTER.longitude - 0.002,
+      latitude: PH_CENTER.latitude - 0.002,
+    }
     
     return {
       type: "FeatureCollection",
       features: contract.matchedCooperative.members.map((farmer, idx) => {
-        // Offset each plot slightly so they don't overlap
-        const plotSize = 0.001;
-        const offset = idx * 0.0015; 
+        const plotSize = 0.0006;
+        const offset = idx * 0.0010; 
         return {
           type: "Feature",
           properties: { 
@@ -48,11 +52,11 @@ const GeoOverview = () => {
           geometry: {
             type: "Polygon",
             coordinates: [[
-              [PH_CENTER.longitude + offset, PH_CENTER.latitude],
-              [PH_CENTER.longitude + plotSize + offset, PH_CENTER.latitude],
-              [PH_CENTER.longitude + plotSize + offset, PH_CENTER.latitude + plotSize],
-              [PH_CENTER.longitude + offset, PH_CENTER.latitude + plotSize],
-              [PH_CENTER.longitude + offset, PH_CENTER.latitude],
+              [shiftedCenter.longitude + offset, shiftedCenter.latitude],
+              [shiftedCenter.longitude + plotSize + offset, shiftedCenter.latitude],
+              [shiftedCenter.longitude + plotSize + offset, shiftedCenter.latitude + plotSize],
+              [shiftedCenter.longitude + offset, shiftedCenter.latitude + plotSize],
+              [shiftedCenter.longitude + offset, shiftedCenter.latitude],
             ]],
           },
         };
