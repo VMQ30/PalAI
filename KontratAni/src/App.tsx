@@ -1,12 +1,91 @@
+// import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+// import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+// import { Toaster as Sonner } from "@/components/ui/sonner";
+// import { Toaster } from "@/components/ui/toaster";
+// import { TooltipProvider } from "@/components/ui/tooltip";
+// import { AnimatePresence } from "framer-motion";
+
+// // 1. Import our new combined Auth component instead of Login and Signup
+// import Auth from "./pages/Auth.tsx"; 
+// import NotFound from "./pages/NotFound.tsx";
+
+// const BuyerDashboard = () => <div className="p-10 text-2xl font-bold">🏢 Buyer Dashboard (Coming Soon)</div>;
+// const CoopDashboard = () => <div className="p-10 text-2xl font-bold">🤝 Cooperative Dashboard (Coming Soon)</div>;
+// const FarmerDashboard = () => <div className="p-10 text-2xl font-bold">🌱 Farmer Dashboard (Coming Soon)</div>;
+
+// const queryClient = new QueryClient();
+
+// const AnimatedRoutes = () => {
+//   const location = useLocation();
+
+//   return (
+//     <AnimatePresence mode="wait">
+//       <Routes location={location} key={location.pathname}>
+//         {/* 2. Map the root path directly to our new sliding Auth component */}
+//         <Route path="/" element={<Auth />} />
+        
+//         {/* Note: We completely removed the <Route path="/signup" /> because it's built into Auth now! */}
+
+//         <Route path="/buyer-dashboard" element={<BuyerDashboard />} />
+//         <Route path="/coop-dashboard" element={<CoopDashboard />} />
+//         <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
+        
+//         {/* Catch-all for 404s */}
+//         <Route path="*" element={<NotFound />} />
+//       </Routes>
+//     </AnimatePresence>
+//   );
+// };
+
+// const App = () => (
+//   <QueryClientProvider client={queryClient}>
+//     <TooltipProvider>
+//       <Toaster />
+//       <Sonner />
+//       <BrowserRouter>
+//         <AnimatedRoutes />
+//       </BrowserRouter>
+//     </TooltipProvider>
+//   </QueryClientProvider>
+// );
+
+// export default App;
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
+import { AnimatePresence } from "framer-motion";
+import Auth from "./pages/Auth.tsx"; 
 import NotFound from "./pages/NotFound.tsx";
+import BuyerLayout from "@/components/buyer/buyerlayout.tsx";
+
+// placeholder muna itech connect connect nalang 
+const CoopDashboard = () => <div className="p-10 text-2xl font-bold">🤝 Cooperative Dashboard (Coming Soon)</div>;
+const FarmerDashboard = () => <div className="p-10 text-2xl font-bold">🌱 Farmer Dashboard (Coming Soon)</div>;
 
 const queryClient = new QueryClient();
+
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Auth />} />
+        
+        {/* Dito siya icconnect also need pala gumawa tayo ng layout kasi yun yung magsserve as a master
+        container between the role's dashboard view and sidebard view. */}
+        <Route path="/buyer-dashboard" element={<BuyerLayout />} />
+        <Route path="/coop-dashboard" element={<CoopDashboard />} />
+        <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -14,11 +93,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AnimatedRoutes />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
