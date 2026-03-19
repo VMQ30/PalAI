@@ -4,20 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react'; // 👈 added useEffect
+import { useState, useEffect } from 'react'; 
 import { Lock, CheckCircle2, ArrowLeft, Sprout, Droplets, Sun, Truck, Package } from 'lucide-react';
-
-const CROP_STATUS_KEY = 'kontratani_crop_status'; // 👈 added
-
-const timelineSteps: { status: CropStatus; label: string; icon: React.ElementType }[] = [
-  { status: 'pending', label: 'Contract Signed', icon: Package },
-  { status: 'seeds_planted', label: 'Seeds Planted', icon: Sprout },
-  { status: 'fertilized', label: 'Fertilized', icon: Droplets },
-  { status: 'growing', label: 'Growing', icon: Sun },
-  { status: 'ready_for_harvest', label: 'Ready for Harvest', icon: Sprout },
-  { status: 'harvested', label: 'Harvested', icon: Package },
-  { status: 'delivered', label: 'Delivered', icon: Truck },
-];
+import ContractsIndex from './contracts/ContractsIndex';
 
 const statusOrder: CropStatus[] = ['pending', 'seeds_planted', 'fertilized', 'growing', 'ready_for_harvest', 'harvested', 'delivered'];
 
@@ -26,7 +15,8 @@ export function ContractsView() {
   const [escrowModal, setEscrowModal] = useState(false);
   const [escrowSuccess, setEscrowSuccess] = useState(false);
 
-  // 👇 Listen for crop status updates from farmer's mobile tab
+  const CROP_STATUS_KEY = 'kontratani_crop_status';
+
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key !== CROP_STATUS_KEY || !e.newValue) return;
@@ -67,8 +57,6 @@ export function ContractsView() {
     );
   }
 
-  const currentStepIdx = statusOrder.indexOf(contract.cropStatus);
-
   const handleFundEscrow = () => {
     fundContract(contract.id);
     setEscrowSuccess(true);
@@ -101,44 +89,8 @@ export function ContractsView() {
           </Badge>
         )}
       </div>
-
-      {/* Traceability Timeline */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Traceability Timeline</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="relative space-y-0">
-            {timelineSteps.map((step, i) => {
-              const Icon = step.icon;
-              const done = i <= currentStepIdx;
-              const current = i === currentStepIdx;
-              return (
-                <div key={step.status} className="flex gap-4">
-                  <div className="flex flex-col items-center">
-                    <motion.div
-                      initial={{ scale: 0.8 }}
-                      animate={{ scale: current ? 1.1 : 1 }}
-                      className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-colors ${
-                        done ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                    </motion.div>
-                    {i < timelineSteps.length - 1 && (
-                      <div className={`w-0.5 h-8 ${i < currentStepIdx ? 'bg-primary' : 'bg-border'}`} />
-                    )}
-                  </div>
-                  <div className="pb-8">
-                    <p className={`text-sm font-medium ${done ? 'text-foreground' : 'text-muted-foreground'}`}>{step.label}</p>
-                    {current && <p className="text-xs text-primary font-medium">Current Status</p>}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+      
+      <ContractsIndex/>
 
       {/* Cooperative Details */}
       {contract.matchedCooperative && (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +6,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAppStore, type FarmerSmsStatus } from '@/store/useAppStore';
 import { MessageSquare, Send, MapPin, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import Map, { Source, Layer } from "react-map-gl/maplibre";
+import { FeatureCollection } from "geojson";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 const statusConfig: Record<FarmerSmsStatus, { label: string; color: string; mapColor: string }> = {
   pending:   { label: 'Pending',   color: 'bg-muted text-muted-foreground',                 mapColor: 'bg-muted-foreground/30' },
@@ -70,8 +73,8 @@ export function SmsHubView() {
     (c) => ['accepted', 'funded', 'in_progress'].includes(c.status) && c.matchedCooperative
   );
   const [selectedContract, setSelectedContract] = useState<string | null>(activeContracts[0]?.id || null);
-  const contract = activeContracts.find((c) => c.id === selectedContract);
-  const farmers  = contract?.matchedCooperative?.members || [];
+  const contract = activeContracts.find(c => c.id === selectedContract);
+  const farmers = contract?.matchedCooperative?.members || [];
 
   const activeTemplate = BROADCAST_TEMPLATES.find((t) => t.key === selectedTemplate);
 
@@ -85,6 +88,60 @@ export function SmsHubView() {
     setBroadcastLang(l);
     if (activeTemplate) setEditableMessage(activeTemplate[l]);
   };
+  
+  const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
+  const MAP_STYLE = `https://api.maptiler.com/maps/satellite/style.json?key=${MAPTILER_KEY}`;
+  const TERRAIN_URL = `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${MAPTILER_KEY}`;
+
+  const [mapError, setMapError] = useState(!MAPTILER_KEY);
+  
+  const MapFallback = ({ message }) => (
+    <div className="relative flex h-52 items-center justify-center rounded-t-lg bg-muted lg:h-64">
+      <MapPin className="h-12 w-12 text-muted-foreground/40" />
+      <span className="absolute bottom-3 left-3 rounded-md bg-card/80 px-2 py-1 text-xs font-medium text-heading backdrop-blur">
+        {message}
+      </span>
+    </div>
+  );
+
+  const PH_CENTER = {
+    longitude: 120.90, 
+    latitude: 15.71,
+  };
+
+  const plotGeoJSON = useMemo<FeatureCollection | null>(() => {
+    if (!contract || !contract.matchedCooperative) return null;
+
+    const shiftedCenter = {
+      longitude: PH_CENTER.longitude - 0.002,
+      latitude: PH_CENTER.latitude - 0.002,
+    }
+    
+    return {
+      type: "FeatureCollection",
+      features: contract.matchedCooperative.members.map((farmer, idx) => {
+        const plotSize = 0.0006;
+        const offset = idx * 0.0010; 
+        return {
+          type: "Feature",
+          properties: { 
+            name: farmer.name, 
+            status: farmer.smsStatus 
+          },
+          geometry: {
+            type: "Polygon",
+            coordinates: [[
+              [shiftedCenter.longitude + offset, shiftedCenter.latitude],
+              [shiftedCenter.longitude + plotSize + offset, shiftedCenter.latitude],
+              [shiftedCenter.longitude + plotSize + offset, shiftedCenter.latitude + plotSize],
+              [shiftedCenter.longitude + offset, shiftedCenter.latitude + plotSize],
+              [shiftedCenter.longitude + offset, shiftedCenter.latitude],
+            ]],
+          },
+        };
+      }),
+    };
+  }, [contract]);
 
   const handleBroadcast = () => {
     if (!contract || !editableMessage.trim()) return;
@@ -92,7 +149,6 @@ export function SmsHubView() {
 
     const msgText = editableMessage.trim();
 
-    // ── Write to localStorage so MobileView tab picks it up via storage event ──
     const payload = {
       id: `bcast-${Date.now()}`,
       text: msgText,
@@ -100,7 +156,6 @@ export function SmsHubView() {
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 
-    // Update farmer statuses with stagger
     farmers.forEach((f, i) => {
       setTimeout(() => {
         updateFarmerSmsStatus(contract.id, f.id, 'notified');
@@ -136,6 +191,13 @@ export function SmsHubView() {
       </div>
     );
   }
+
+  const coop = contract.matchedCooperative;
+  const plots = coop.members.map((farmer) => ({
+    name: `${farmer.name.split(" ")[0]}'s Plot`,
+    yield: `${Math.round(contract.volumeKg / coop.members.length)} kg est.`,
+    status: farmer.smsStatus === "pending" ? "Pending" : "Active",
+  }));
 
   return (
     <div className="space-y-6">
@@ -270,18 +332,59 @@ export function SmsHubView() {
             <CardDescription>Plot colors reflect farmer status</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-3">
-              {farmers.map((f) => {
-                const cfg = statusConfig[f.smsStatus];
-                return (
-                  <div key={f.id} className={`flex flex-col items-center justify-center rounded-lg border border-border p-4 transition-colors ${cfg.mapColor}/20`}>
-                    <div className={`mb-2 h-8 w-8 rounded-full ${cfg.mapColor}`} />
-                    <p className="text-xs font-medium text-foreground">{f.name.split(' ')[0]}</p>
-                    <p className="text-[10px] text-muted-foreground">{f.hectares} ha</p>
-                    <Badge variant="outline" className={`mt-1 text-[10px] ${cfg.color}`}>{cfg.label}</Badge>
-                  </div>
-                );
-              })}
+            <div className="relative h-52 w-full overflow-hidden rounded-t-lg lg:h-64">
+              {!mapError ? (
+                <Map
+                  initialViewState={{
+                    longitude: PH_CENTER.longitude, 
+                    latitude: PH_CENTER.latitude,
+                    zoom: 15,
+                    pitch: 60, 
+                    bearing: 20,
+                  }}
+                  mapStyle={MAP_STYLE}
+                  terrain={{ source: "terrain-source", exaggeration: 1.5 }}
+                  interactive={true}
+                >
+                  <Source id="terrain-source" type="raster-dem" url={TERRAIN_URL} tileSize={256} />
+      
+                  {plotGeoJSON && (
+                    <Source id="plot-data" type="geojson" data={plotGeoJSON}>
+                      <Layer
+                        id="plot-fills"
+                        type="fill"
+                        source="plot-data"
+                        paint={{
+                          "fill-color": [
+                            "match",
+                            ["get", "status"],
+                            "pending", "#e4e3df", 
+                            "#22c55e", 
+                          ],
+                          "fill-opacity": 0.9,
+                        }}
+                      />
+                      <Layer
+                        id="plot-outlines"
+                        type="line"
+                        source="plot-data"
+                        paint={{
+                          "line-color": "#ffffff",
+                          "line-width": 2,
+                        }}
+                      />
+                    </Source>
+                  )}
+                </Map>
+              ) : (
+                <MapFallback message="Map loading failed. Please check your MapTiler API key." />
+              )}
+              
+              {!mapError && (
+                <span className="absolute bottom-3 left-3 rounded-md bg-card/80 px-2 py-1 text-xs font-medium text-heading backdrop-blur z-10">
+                  Cooperative Zone: Region 1
+                </span>
+              )}
             </div>
             <div className="mt-4 flex flex-wrap gap-3 text-xs">
               {Object.entries(statusConfig).map(([key, val]) => (
