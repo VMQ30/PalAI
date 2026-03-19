@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react'; // 👈 added useEffect
+import { useState, useEffect } from 'react'; 
 import { Lock, CheckCircle2, ArrowLeft, Sprout, Droplets, Sun, Truck, Package } from 'lucide-react';
 import ContractsIndex from './contracts/ContractsIndex';
 
@@ -15,7 +15,8 @@ export function ContractsView() {
   const [escrowModal, setEscrowModal] = useState(false);
   const [escrowSuccess, setEscrowSuccess] = useState(false);
 
-  // 👇 Listen for crop status updates from farmer's mobile tab
+  const CROP_STATUS_KEY = 'kontratani_crop_status';
+
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key !== CROP_STATUS_KEY || !e.newValue) return;
