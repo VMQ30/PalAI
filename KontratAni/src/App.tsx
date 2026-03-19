@@ -7,7 +7,7 @@ import { AnimatePresence } from "framer-motion";
 import Auth from "./pages/Auth.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Manager from "./pages/Manager.tsx";
-import BuyerLayout from "@/components/buyer/buyerlayout.tsx";
+import BuyerLayout from "@/components/buyer/BuyerLayout.tsx";
 
 // placeholder muna itech connect connect nalang
 const CoopDashboard = () => (
