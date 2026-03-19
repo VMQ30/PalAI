@@ -6,7 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AnimatePresence } from "framer-motion";
 import Auth from "./pages/Auth.tsx"; 
 import NotFound from "./pages/NotFound.tsx";
-import BuyerLayout from "@/components/buyer/buyerlayout.tsx";
+import BuyerLayout from "@/components/buyer/BuyerLayout.tsx";
+import Manager from "@/components/manager/Manager.tsx";
 
 // placeholder muna itech connect connect nalang 
 const CoopDashboard = () => <div className="p-10 text-2xl font-bold">🤝 Cooperative Dashboard (Coming Soon)</div>;
@@ -25,7 +26,7 @@ const AnimatedRoutes = () => {
         {/* Dito siya icconnect also need pala gumawa tayo ng layout kasi yun yung magsserve as a master
         container between the role's dashboard view and sidebard view. */}
         <Route path="/buyer-dashboard" element={<BuyerLayout />} />
-        <Route path="/coop-dashboard" element={<CoopDashboard />} />
+        <Route path="/coop-dashboard" element={<Manager />} />
         <Route path="/farmer-dashboard" element={<FarmerDashboard />} />
         
         <Route path="*" element={<NotFound />} />

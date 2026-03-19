@@ -14,6 +14,7 @@ export interface InboxContract {
   escrowAmount: number;
   targetDate: string;
   terms: string;
+  progress: number;
   status: 'pending' | 'accepted' | 'declined';
   postedAt: string;
 }
