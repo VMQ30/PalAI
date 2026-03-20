@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,28 +6,156 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAppStore, type FarmerSmsStatus } from '@/store/useAppStore';
 import { MessageSquare, Send, MapPin, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import Map, { Source, Layer } from "react-map-gl/maplibre";
+import { FeatureCollection } from "geojson";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 const statusConfig: Record<FarmerSmsStatus, { label: string; color: string; mapColor: string }> = {
-  pending: { label: 'Pending', color: 'bg-muted text-muted-foreground', mapColor: 'bg-muted-foreground/30' },
-  notified: { label: 'SMS Sent', color: 'bg-sand/20 text-sand-foreground border-sand/40', mapColor: 'bg-sand' },
-  confirmed: { label: 'Confirmed', color: 'bg-accent text-accent-foreground', mapColor: 'bg-secondary' },
-  planted: { label: 'Planted', color: 'bg-primary/15 text-primary border-primary/30', mapColor: 'bg-primary' },
-  harvested: { label: 'Harvested', color: 'bg-forest/15 text-forest border-forest/30', mapColor: 'bg-forest' },
+  pending:   { label: 'Pending',   color: 'bg-muted text-muted-foreground',                 mapColor: 'bg-muted-foreground/30' },
+  notified:  { label: 'SMS Sent',  color: 'bg-sand/20 text-sand-foreground border-sand/40', mapColor: 'bg-sand' },
+  confirmed: { label: 'Confirmed', color: 'bg-accent text-accent-foreground',               mapColor: 'bg-secondary' },
+  planted:   { label: 'Planted',   color: 'bg-primary/15 text-primary border-primary/30',   mapColor: 'bg-primary' },
+  harvested: { label: 'Harvested', color: 'bg-forest/15 text-forest border-forest/30',      mapColor: 'bg-forest' },
 };
 
-export function SmsHubView() {
-  const contracts = useAppStore((s) => s.contracts);
-  const updateFarmerSmsStatus = useAppStore((s) => s.updateFarmerSmsStatus);
-  const [broadcasting, setBroadcasting] = useState(false);
+const BROADCAST_TEMPLATES = [
+  {
+    key: 'weather_sunny',
+    label: '🌤️ Clear Weather',
+    en: `[KontratAni] Good news! Clear skies expected this week. Great conditions for planting and field work. Stay hydrated. 🌤️`,
+    tl: `[KontratAni] Magandang balita! Maliwanag ang kalangitan ngayong linggo. Mainam para sa pagtatanim at gawaing bukid. Uminom ng maraming tubig. 🌤️`,
+  },
+  {
+    key: 'weather_rain',
+    label: '🌧️ Rain Alert',
+    en: `[KontratAni] Rain alert! Heavy rains expected in the next 2-3 days. Secure your crops and check drainage. 🌧️`,
+    tl: `[KontratAni] Babala sa ulan! Malakas na ulan inaasahan sa susunod na 2-3 araw. Pangalagaan ang pananim at suriin ang drainage. 🌧️`,
+  },
+  {
+    key: 'weather_typhoon',
+    label: '⛈️ Typhoon Warning',
+    en: `[KontratAni] TYPHOON WARNING. A typhoon may affect your area. Harvest what you can and prepare for strong winds. Stay safe! ⛈️`,
+    tl: `[KontratAni] BABALA SA BAGYO. Maaaring maapektuhan ang inyong lugar. Mag-ani na ng makakaya at maghanda sa malakas na hangin. Mag-ingat! ⛈️`,
+  },
+  {
+    key: 'weather_drought',
+    label: '🌵 Dry Spell',
+    en: `[KontratAni] Dry spell advisory. Little to no rain expected for 2 weeks. Prioritize irrigation and water conservation. 🌵`,
+    tl: `[KontratAni] Payo sa tagtuyot. Kaunti o walang ulan sa susunod na 2 linggo. Unahin ang patubig at pag-iimpok ng tubig. 🌵`,
+  },
+  {
+    key: 'crop_reminder',
+    label: '📋 Crop Reminder',
+    en: `[KontratAni] Reminder: Please update your crop status. Thank you!`,
+    tl: `[KontratAni] Paalala: Mangyaring i-update ang inyong pananim. Salamat!`,
+  },
+  {
+    key: 'payment_update',
+    label: '💰 Payment Update',
+    en: `[KontratAni] Good news! Payment for your delivered crops is being processed. You will receive your payout within 24-48 hours. 💰`,
+    tl: `[KontratAni] Magandang balita! Pinoproseso na ang bayad para sa inyong pananim. Matatanggap ninyo ito sa loob ng 24-48 oras. 💰`,
+  },
+];
 
-  const activeContracts = contracts.filter(c => ['accepted', 'funded', 'in_progress'].includes(c.status) && c.matchedCooperative);
+const STORAGE_KEY = 'kontratani_broadcast';
+
+export function SmsHubView() {
+  const contracts             = useAppStore((s) => s.contracts);
+  const updateFarmerSmsStatus = useAppStore((s) => s.updateFarmerSmsStatus);
+  const [broadcasting, setBroadcasting]         = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState('crop_reminder');
+  const [broadcastLang, setBroadcastLang]       = useState<'en' | 'tl'>('en');
+  const [editableMessage, setEditableMessage]   = useState(
+    BROADCAST_TEMPLATES.find((t) => t.key === 'crop_reminder')!['en']
+  );
+
+  const activeContracts = contracts.filter(
+    (c) => ['accepted', 'funded', 'in_progress'].includes(c.status) && c.matchedCooperative
+  );
   const [selectedContract, setSelectedContract] = useState<string | null>(activeContracts[0]?.id || null);
   const contract = activeContracts.find(c => c.id === selectedContract);
   const farmers = contract?.matchedCooperative?.members || [];
 
+  const activeTemplate = BROADCAST_TEMPLATES.find((t) => t.key === selectedTemplate);
+
+  const handleSelectTemplate = (key: string) => {
+    setSelectedTemplate(key);
+    const t = BROADCAST_TEMPLATES.find((t) => t.key === key);
+    if (t) setEditableMessage(t[broadcastLang]);
+  };
+
+  const handleSelectLang = (l: 'en' | 'tl') => {
+    setBroadcastLang(l);
+    if (activeTemplate) setEditableMessage(activeTemplate[l]);
+  };
+  
+  const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
+  const MAP_STYLE = `https://api.maptiler.com/maps/satellite/style.json?key=${MAPTILER_KEY}`;
+  const TERRAIN_URL = `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${MAPTILER_KEY}`;
+
+  const [mapError, setMapError] = useState(!MAPTILER_KEY);
+  
+  const MapFallback = ({ message }) => (
+    <div className="relative flex h-52 items-center justify-center rounded-t-lg bg-muted lg:h-64">
+      <MapPin className="h-12 w-12 text-muted-foreground/40" />
+      <span className="absolute bottom-3 left-3 rounded-md bg-card/80 px-2 py-1 text-xs font-medium text-heading backdrop-blur">
+        {message}
+      </span>
+    </div>
+  );
+
+  const PH_CENTER = {
+    longitude: 120.90, 
+    latitude: 15.71,
+  };
+
+  const plotGeoJSON = useMemo<FeatureCollection | null>(() => {
+    if (!contract || !contract.matchedCooperative) return null;
+
+    const shiftedCenter = {
+      longitude: PH_CENTER.longitude - 0.002,
+      latitude: PH_CENTER.latitude - 0.002,
+    }
+    
+    return {
+      type: "FeatureCollection",
+      features: contract.matchedCooperative.members.map((farmer, idx) => {
+        const plotSize = 0.0006;
+        const offset = idx * 0.0010; 
+        return {
+          type: "Feature",
+          properties: { 
+            name: farmer.name, 
+            status: farmer.smsStatus 
+          },
+          geometry: {
+            type: "Polygon",
+            coordinates: [[
+              [shiftedCenter.longitude + offset, shiftedCenter.latitude],
+              [shiftedCenter.longitude + plotSize + offset, shiftedCenter.latitude],
+              [shiftedCenter.longitude + plotSize + offset, shiftedCenter.latitude + plotSize],
+              [shiftedCenter.longitude + offset, shiftedCenter.latitude + plotSize],
+              [shiftedCenter.longitude + offset, shiftedCenter.latitude],
+            ]],
+          },
+        };
+      }),
+    };
+  }, [contract]);
+
   const handleBroadcast = () => {
-    if (!contract) return;
+    if (!contract || !editableMessage.trim()) return;
     setBroadcasting(true);
+
+    const msgText = editableMessage.trim();
+
+    const payload = {
+      id: `bcast-${Date.now()}`,
+      text: msgText,
+      time: new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' }),
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+
     farmers.forEach((f, i) => {
       setTimeout(() => {
         updateFarmerSmsStatus(contract.id, f.id, 'notified');
@@ -40,11 +168,11 @@ export function SmsHubView() {
   };
 
   const smsStats = {
-    total: farmers.length,
-    notified: farmers.filter(f => f.smsStatus !== 'pending').length,
-    confirmed: farmers.filter(f => ['confirmed', 'planted', 'harvested'].includes(f.smsStatus)).length,
-    planted: farmers.filter(f => ['planted', 'harvested'].includes(f.smsStatus)).length,
-    harvested: farmers.filter(f => f.smsStatus === 'harvested').length,
+    total:     farmers.length,
+    notified:  farmers.filter((f) => f.smsStatus !== 'pending').length,
+    confirmed: farmers.filter((f) => ['confirmed', 'planted', 'harvested'].includes(f.smsStatus)).length,
+    planted:   farmers.filter((f) => ['planted', 'harvested'].includes(f.smsStatus)).length,
+    harvested: farmers.filter((f) => f.smsStatus === 'harvested').length,
   };
 
   if (activeContracts.length === 0) {
@@ -64,6 +192,13 @@ export function SmsHubView() {
     );
   }
 
+  const coop = contract.matchedCooperative;
+  const plots = coop.members.map((farmer) => ({
+    name: `${farmer.name.split(" ")[0]}'s Plot`,
+    yield: `${Math.round(contract.volumeKg / coop.members.length)} kg est.`,
+    status: farmer.smsStatus === "pending" ? "Pending" : "Active",
+  }));
+
   return (
     <div className="space-y-6">
       <div className="flex items-start justify-between">
@@ -79,22 +214,74 @@ export function SmsHubView() {
 
       {/* Contract Selector */}
       <div className="flex gap-2">
-        {activeContracts.map(c => (
-          <Button key={c.id} variant={selectedContract === c.id ? 'default' : 'outline'} size="sm" onClick={() => setSelectedContract(c.id)}>
+        {activeContracts.map((c) => (
+          <Button key={c.id} variant={selectedContract === c.id ? 'default' : 'outline'} size="sm"
+            onClick={() => setSelectedContract(c.id)}>
             {c.crop}
           </Button>
         ))}
       </div>
 
+      {/* Broadcast Composer */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Compose Broadcast</CardTitle>
+          <CardDescription className="text-xs">
+            Farmers will receive this message live on their SMS view.{' '}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {BROADCAST_TEMPLATES.map((t) => (
+              <button key={t.key} onClick={() => handleSelectTemplate(t.key)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  selectedTemplate === t.key
+                    ? 'border-primary bg-primary/10 text-primary'
+                    : 'border-border bg-background text-muted-foreground hover:border-primary/40'
+                }`}>
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1 w-fit rounded-lg border border-border bg-accent p-1">
+            {(['en', 'tl'] as const).map((l) => (
+              <button key={l} onClick={() => handleSelectLang(l)}
+                className={`rounded-md px-3 py-1 text-xs font-semibold transition-colors ${
+                  broadcastLang === l ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+                }`}>
+                {l === 'en' ? 'English' : 'Tagalog'}
+              </button>
+            ))}
+          </div>
+
+          <div>
+            <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              Message · Edit before sending
+            </p>
+            <textarea
+              value={editableMessage}
+              onChange={(e) => setEditableMessage(e.target.value)}
+              rows={4}
+              className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none"
+              placeholder="Type your broadcast message here..."
+            />
+            <p className="mt-1 text-[10px] text-muted-foreground">
+              {editableMessage.length} characters · farmers will receive this exactly as typed
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Stats */}
       <div className="grid grid-cols-5 gap-3">
         {[
-          { label: 'Total', value: smsStats.total, color: 'text-foreground' },
-          { label: 'SMS Sent', value: smsStats.notified, color: 'text-sand-foreground' },
+          { label: 'Total',     value: smsStats.total,     color: 'text-foreground' },
+          { label: 'SMS Sent',  value: smsStats.notified,  color: 'text-sand-foreground' },
           { label: 'Confirmed', value: smsStats.confirmed, color: 'text-secondary' },
-          { label: 'Planted', value: smsStats.planted, color: 'text-primary' },
+          { label: 'Planted',   value: smsStats.planted,   color: 'text-primary' },
           { label: 'Harvested', value: smsStats.harvested, color: 'text-forest' },
-        ].map(s => (
+        ].map((s) => (
           <Card key={s.label}>
             <CardContent className="p-4 text-center">
               <p className={`font-display text-2xl font-bold ${s.color}`}>{s.value}</p>
@@ -105,7 +292,6 @@ export function SmsHubView() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Live Table */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Farmer Status Table</CardTitle>
@@ -138,7 +324,6 @@ export function SmsHubView() {
           </CardContent>
         </Card>
 
-        {/* Interactive Farm Map (simplified grid) */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -147,20 +332,60 @@ export function SmsHubView() {
             <CardDescription>Plot colors reflect farmer status</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-3">
-              {farmers.map((f) => {
-                const cfg = statusConfig[f.smsStatus];
-                return (
-                  <div key={f.id} className={`flex flex-col items-center justify-center rounded-lg border border-border p-4 transition-colors ${cfg.mapColor}/20`}>
-                    <div className={`mb-2 h-8 w-8 rounded-full ${cfg.mapColor}`} />
-                    <p className="text-xs font-medium text-foreground">{f.name.split(' ')[0]}</p>
-                    <p className="text-[10px] text-muted-foreground">{f.hectares} ha</p>
-                    <Badge variant="outline" className={`mt-1 text-[10px] ${cfg.color}`}>{cfg.label}</Badge>
-                  </div>
-                );
-              })}
+            <div className="relative h-52 w-full overflow-hidden rounded-t-lg lg:h-64">
+              {!mapError ? (
+                <Map
+                  initialViewState={{
+                    longitude: PH_CENTER.longitude, 
+                    latitude: PH_CENTER.latitude,
+                    zoom: 15,
+                    pitch: 60, 
+                    bearing: 20,
+                  }}
+                  mapStyle={MAP_STYLE}
+                  terrain={{ source: "terrain-source", exaggeration: 1.5 }}
+                  interactive={true}
+                >
+                  <Source id="terrain-source" type="raster-dem" url={TERRAIN_URL} tileSize={256} />
+      
+                  {plotGeoJSON && (
+                    <Source id="plot-data" type="geojson" data={plotGeoJSON}>
+                      <Layer
+                        id="plot-fills"
+                        type="fill"
+                        source="plot-data"
+                        paint={{
+                          "fill-color": [
+                            "match",
+                            ["get", "status"],
+                            "pending", "#e4e3df", 
+                            "#22c55e", 
+                          ],
+                          "fill-opacity": 0.9,
+                        }}
+                      />
+                      <Layer
+                        id="plot-outlines"
+                        type="line"
+                        source="plot-data"
+                        paint={{
+                          "line-color": "#ffffff",
+                          "line-width": 2,
+                        }}
+                      />
+                    </Source>
+                  )}
+                </Map>
+              ) : (
+                <MapFallback message="Map loading failed. Please check your MapTiler API key." />
+              )}
+              
+              {!mapError && (
+                <span className="absolute bottom-3 left-3 rounded-md bg-card/80 px-2 py-1 text-xs font-medium text-heading backdrop-blur z-10">
+                  Cooperative Zone: Region 1
+                </span>
+              )}
             </div>
-            {/* Legend */}
             <div className="mt-4 flex flex-wrap gap-3 text-xs">
               {Object.entries(statusConfig).map(([key, val]) => (
                 <div key={key} className="flex items-center gap-1.5">

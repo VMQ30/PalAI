@@ -64,12 +64,24 @@ export interface DemandRequest {
   targetDate: string;
 }
 
+// ── Broadcast message (manager → farmer SMS) ──────────────────────────────────
+export interface BroadcastMessage {
+  id: string;
+  text: string;
+  time: string;
+}
+
 interface AppState {
   contracts: Contract[];
   cooperatives: Cooperative[];
   soloFarmers: SoloFarmer[];
   activeView: string;
   selectedContractId: string | null;
+
+  // Broadcast messages from manager to farmers
+  broadcastMessages: BroadcastMessage[];
+  addBroadcastMessage: (text: string) => void;
+  clearBroadcastMessages: () => void;
 
   setActiveView: (view: string) => void;
   selectContract: (id: string | null) => void;
@@ -151,6 +163,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   soloFarmers: mocksoloFarmers,
   activeView: 'dashboard',
   selectedContractId: null,
+  broadcastMessages: [],
+
+  addBroadcastMessage: (text) => {
+    const msg: BroadcastMessage = {
+      id: `bcast-${Date.now()}`,
+      text,
+      time: new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' }),
+    };
+    set((s) => ({ broadcastMessages: [...s.broadcastMessages, msg] }));
+  },
+
+  clearBroadcastMessages: () => set({ broadcastMessages: [] }),
 
   setActiveView: (view) => set({ activeView: view }),
   selectContract: (id) => set({ selectedContractId: id }),

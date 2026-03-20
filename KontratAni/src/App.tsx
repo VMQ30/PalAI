@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound.tsx";
 import BuyerLayout from "@/components/buyer/BuyerLayout.tsx";
 import Manager from "@/components/manager/Manager.tsx";
 import { FarmerLayout } from "@/components/farmer/FarmerLayout.tsx";
+import MobileView from "@/components/mobile/MobileView.tsx"; // 👈 i-add ito
 
 // placeholder muna itech connect connect nalang
 const CoopDashboard = () => (
@@ -32,6 +33,9 @@ const AnimatedRoutes = () => {
         <Route path="/buyer-dashboard" element={<BuyerLayout />} />
         <Route path="/coop-dashboard" element={<Manager />} />
         <Route path="/farmer-dashboard" element={<FarmerLayout />} />
+
+        {/* 👇 Mobile SMS View */}
+        <Route path="/mobile-view" element={<MobileView />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
