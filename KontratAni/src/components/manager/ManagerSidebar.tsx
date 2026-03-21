@@ -9,6 +9,7 @@ import {
   Sprout,
   BarChart3,
   LogOut,
+  Brain,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ const navItems = [
   { id: "profile", label: "Profile & Land", icon: User },
   { id: "ai-reports", label: "AI Reports", icon: BarChart3 },
   { id: "inbox", label: "Contract Inbox", icon: Inbox },
+  { id: "ai-tracker", label: "AI Contract Tracker", icon: Brain },
   { id: "allocation", label: "Quota Allocation", icon: Sliders },
   { id: "sms-hub", label: "SMS & Monitoring", icon: MessageSquare },
   { id: "payouts", label: "Payouts", icon: Wallet },
@@ -27,8 +29,8 @@ export function ManagerSidebar() {
 
   // Reusable logout function
   const handleLogout = () => {
-    localStorage.removeItem('palai_user_role'); 
-    navigate('/'); 
+    localStorage.removeItem("palai_user_role");
+    navigate("/");
   };
 
   return (
@@ -83,8 +85,12 @@ export function ManagerSidebar() {
 
       <div className="border-t border-sidebar-border px-6 py-4">
         {/* Changed these to foreground to ensure readability */}
-        <p className="text-xs font-medium text-sidebar-foreground">Quezon Farmers Cooperative</p>
-        <p className="text-xs text-sidebar-foreground/70">Cooperative Manager</p>
+        <p className="text-xs font-medium text-sidebar-foreground">
+          Quezon Farmers Cooperative
+        </p>
+        <p className="text-xs text-sidebar-foreground/70">
+          Cooperative Manager
+        </p>
       </div>
     </aside>
   );
