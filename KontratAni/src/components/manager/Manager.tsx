@@ -7,6 +7,7 @@ import { SmsHubView } from "@/components/manager/SmsHubView";
 import { PayoutView } from "@/components/manager/PayoutView";
 import { AiReportView } from "@/components/manager/AiReportView";
 import { AiChatbot } from "@/components/manager/AiChatbot";
+import { ContractAiAssistant } from "@/components/manager/ContractAiAssistant";
 import { useAppStore } from "@/store/useAppStore";
 
 const Manager = () => {
@@ -23,6 +24,8 @@ const Manager = () => {
         return <ProfileView />;
       case "inbox":
         return <ContractInboxView />;
+      case "ai-tracker":
+        return <ContractAiAssistant />;
       case "allocation":
         return <QuotaAllocationView />;
       case "sms-hub":
