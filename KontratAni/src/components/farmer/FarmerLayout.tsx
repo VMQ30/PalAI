@@ -6,6 +6,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { ContractProgress } from "./ContractProgress";
 import { AiReportView } from "@/components/manager/AiReportView";
 import { AiChatbot } from "@/components/manager/AiChatbot";
+import { ContractAiAssistant } from "@/components/manager/ContractAiAssistant";
 import { DirectPayoutView } from "./DirectPayoutView";
 
 export function FarmerLayout() {
@@ -24,6 +25,8 @@ export function FarmerLayout() {
         return <ContractInboxView />;
       case "contract progress":
         return <ContractProgress />;
+      case "ai-tracker":
+        return <ContractAiAssistant />;
       case "direct payout":
         return <DirectPayoutView />;
       case "ai-reports":

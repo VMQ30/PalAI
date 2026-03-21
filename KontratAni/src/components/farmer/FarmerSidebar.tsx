@@ -1,12 +1,21 @@
 import { useNavigate } from "react-router-dom";
 import { useAppStore } from "@/store/useAppStore";
-import { User, Inbox, Sprout, Wallet, BarChart3, LogOut } from "lucide-react";
+import {
+  User,
+  Inbox,
+  Sprout,
+  Wallet,
+  BarChart3,
+  LogOut,
+  Brain,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { id: "profile", label: "Profile & Land", icon: User },
   { id: "ai-reports", label: "AI Reports", icon: BarChart3 },
   { id: "inbox", label: "Contract Inbox", icon: Inbox },
+  { id: "ai-tracker", label: "AI Contract Tracker", icon: Brain },
   { id: "contract progress", label: "Contract Progress", icon: Sprout },
   { id: "direct payout", label: "Direct Payout", icon: Wallet },
 ];
