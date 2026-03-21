@@ -129,6 +129,23 @@ const GeoOverview = () => {
                     "line-width": 2,
                   }}
                 />
+                <Layer
+                  id="plot-labels"
+                  type="symbol"
+                  source="plot-data"
+                  layout={{
+                    "text-field": ["get", "name"],
+                    "text-size": 12,
+                    "text-font": ["Open Sans Regular", "Arial Unicode MS Regular"],
+                    "text-offset": [0, 0.6],
+                    "text-anchor": "top",
+                  }}
+                  paint={{
+                    "text-color": "#1f2937",
+                    "text-halo-color": "#ffffff",
+                    "text-halo-width": 1.5,
+                  }}
+                />
               </Source>
             )}
           </Map>
