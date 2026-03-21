@@ -1,11 +1,35 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sprout, Loader2, Building2, Users, ArrowLeft, MapPin, Info, ChevronDown } from 'lucide-react';
+import { Sprout, Loader2, Building2, Users, ArrowLeft, MapPin, Info, ChevronDown, X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import myBackground from '../assets/pexels-designstrive-1334312.jpg';
+import Map, { Marker, NavigationControl } from 'react-map-gl/maplibre';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { toast } from 'sonner';
 
+import myBackground from '../assets/pexels-designstrive-1334312.jpg';
+
 type Role = 'buyer' | 'coop' | 'farmer' | null;
+
+// Free OpenStreetMap style so you don't need an API key for MapLibre right now
+const mapStyle = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: ['https://a.tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      attribution: '&copy; OpenStreetMap Contributors',
+      maxzoom: 19
+    }
+  },
+  layers: [
+    {
+      id: 'osm',
+      type: 'raster',
+      source: 'osm'
+    }
+  ]
+};
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -19,7 +43,10 @@ export default function Auth() {
   const [step, setStep] = useState<1 | 2>(1);
   const [role, setRole] = useState<Role>(null);
 
-// eto credentials
+  // Map State
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [pinnedLocation, setPinnedLocation] = useState<{lat: number, lng: number} | null>(null);
+
   const MOCK_ACCOUNTS = [
     { email: 'buyer@test.com', password: 'password123', role: 'buyer' },
     { email: 'coop@test.com', password: 'password123', role: 'coop' },
@@ -39,7 +66,7 @@ export default function Auth() {
 
       if (account) {
         toast.success(`Welcome back! Logged in as ${account.role}.`);
-        localStorage.setItem('kontratani_user_role', account.role);
+        localStorage.setItem('palai_user_role', account.role);
         navigate(`/${account.role}-dashboard`);
       } else {
         toast.error("Invalid email or password. Please try again.");
@@ -49,9 +76,14 @@ export default function Auth() {
 
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if ((role === 'coop' || role === 'farmer') && !pinnedLocation) {
+        toast.error("Please pin your location on the map.");
+        return;
+    }
+
     setIsLoading(true);
     setTimeout(() => {
-      localStorage.setItem('kontratani_user_role', role || '');
+      localStorage.setItem('palai_user_role', role || '');
       navigate(`/${role}-dashboard`);
       setIsLoading(false);
     }, 1500);
@@ -62,8 +94,13 @@ export default function Auth() {
     setTimeout(() => setStep(1), 300); 
   };
 
-  const inputClass = "w-full px-5 py-3 rounded-xl bg-muted border-transparent focus:border-primary focus:bg-transparent focus:ring-2 focus:ring-primary/20 text-sm transition-all outline-none";
-  const selectClass = "w-full px-5 py-3 pr-10 rounded-xl bg-muted border-transparent focus:border-primary focus:bg-transparent focus:ring-2 focus:ring-primary/20 text-sm transition-all outline-none appearance-none cursor-pointer";
+  const handleMapClick = (e: any) => {
+    setPinnedLocation({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+  };
+
+  const inputClass = "w-full px-5 py-3 rounded-xl bg-muted border border-transparent focus:border-primary focus:bg-transparent focus:ring-2 focus:ring-primary/20 text-sm transition-all outline-none placeholder:text-muted-foreground";
+  // Added invalid:text-muted-foreground to handle the placeholder color
+  const selectClass = "w-full px-5 py-3 pr-10 rounded-xl bg-muted border border-transparent focus:border-primary focus:bg-transparent focus:ring-2 focus:ring-primary/20 text-sm transition-all outline-none appearance-none cursor-pointer invalid:text-muted-foreground";
 
   return (
     <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
@@ -74,8 +111,73 @@ export default function Auth() {
       />
       
       <div className="absolute inset-0 z-0 bg-black/20 backdrop-blur-[6px]" />
+      
       <div className="relative z-10 w-full max-w-5xl h-[700px] bg-card rounded-[2.5rem] shadow-[0_0_50px_rgba(0,0,0,0.4)] overflow-hidden flex">
         
+        {/* ==========================================
+            MAP MODAL OVERLAY
+            ========================================== */}
+        <AnimatePresence>
+          {showMapModal && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-[60] bg-background/80 backdrop-blur-sm flex items-center justify-center p-6"
+            >
+              <motion.div 
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="bg-card w-full max-w-3xl h-[80%] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-border"
+              >
+                <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
+                  <div>
+                    <h3 className="font-bold text-foreground">Pin Your Location</h3>
+                    <p className="text-xs text-muted-foreground">Click anywhere on the map to set your farm/coop coordinates.</p>
+                  </div>
+                  <button onClick={() => setShowMapModal(false)} className="p-2 hover:bg-muted rounded-full transition-colors">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <div className="flex-1 relative bg-accent/20">
+                  <Map
+                    initialViewState={{
+                      longitude: 121.7740, // Centered on Philippines
+                      latitude: 12.8797,
+                      zoom: 5
+                    }}
+                    mapStyle={mapStyle as any}
+                    onClick={handleMapClick}
+                    cursor="crosshair"
+                  >
+                    <NavigationControl position="top-right" />
+                    {pinnedLocation && (
+                      <Marker longitude={pinnedLocation.lng} latitude={pinnedLocation.lat} color="var(--primary)" />
+                    )}
+                  </Map>
+                </div>
+
+                <div className="p-4 border-t border-border flex justify-between items-center bg-muted/30">
+                  <div className="text-sm font-mono text-muted-foreground">
+                    {pinnedLocation 
+                      ? `Lat: ${pinnedLocation.lat.toFixed(5)}, Lng: ${pinnedLocation.lng.toFixed(5)}`
+                      : "No location pinned yet"}
+                  </div>
+                  <button 
+                    onClick={() => setShowMapModal(false)}
+                    disabled={!pinnedLocation}
+                    className="flex items-center px-6 py-2 bg-primary text-primary-foreground font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
+                  >
+                    <Check className="w-4 h-4 mr-2" /> Confirm Location
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* ==========================================
             LEFT SIDE: SIGN UP FORMS
             ========================================== */}
@@ -88,7 +190,7 @@ export default function Auth() {
             {step === 1 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4 my-auto max-w-sm mx-auto w-full">
                 <div className="text-center mb-8">
-                  <h1 className="text-3xl font-bold text-primary mb-2">Join KontratAni</h1>
+                  <h1 className="text-3xl font-bold text-primary mb-2">Join PalAI</h1>
                   <p className="text-muted-foreground text-sm">Select your role to get started</p>
                 </div>
                 
@@ -121,7 +223,7 @@ export default function Auth() {
             {step === 2 && (
               <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col h-full">
                 <div className="flex items-center justify-between mb-4 shrink-0">
-                  <button onClick={() => setStep(1)} className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  <button type="button" onClick={() => setStep(1)} className="flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
                     <ArrowLeft className="w-4 h-4 mr-1" /> Back
                   </button>
                   <span className="text-xs font-semibold bg-primary/10 text-primary px-3 py-1 rounded-full uppercase tracking-wider">{role} Account</span>
@@ -145,10 +247,10 @@ export default function Auth() {
                           <div className="relative">
                             <select required className={selectClass} defaultValue="">
                               <option value="" disabled>Select Industry Type</option>
-                              <option value="restaurant">Restaurant / Food Service</option>
-                              <option value="wholesale">Wholesale / Distributor</option>
-                              <option value="retail">Grocery / Retail</option>
-                              <option value="export">Export</option>
+                              <option value="restaurant" className="text-foreground">Restaurant / Food Service</option>
+                              <option value="wholesale" className="text-foreground">Wholesale / Distributor</option>
+                              <option value="retail" className="text-foreground">Grocery / Retail</option>
+                              <option value="export" className="text-foreground">Export</option>
                             </select>
                             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                           </div>
@@ -195,18 +297,38 @@ export default function Auth() {
                             <div className="relative">
                               <select required className={selectClass} defaultValue="">
                                 <option value="" disabled>Ownership</option>
-                                <option value="owner">Owned</option>
-                                <option value="tenant">Tenant</option>
-                                <option value="lease">Leased</option>
+                                <option value="owner" className="text-foreground">Owned</option>
+                                <option value="tenant" className="text-foreground">Tenant</option>
+                                <option value="lease" className="text-foreground">Leased</option>
                               </select>
                               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                             </div>
 
                           </div>
 
-                          <input type="text" placeholder="Soil Type (Optional)" className={inputClass} />
-                          <button type="button" className="w-full flex items-center justify-center py-3 border-2 border-dashed border-primary/50 rounded-xl text-primary hover:bg-primary/5 transition-colors text-sm font-semibold">
-                            <MapPin className="w-4 h-4 mr-2" /> Pin Location on Map
+                          <div className="relative">
+                            <select required className={selectClass} defaultValue="">
+                              <option value="" disabled>Select Soil Type</option>
+                              <option value="loam" className="text-foreground">Loam</option>
+                              <option value="clay" className="text-foreground">Clay</option>
+                              <option value="sandy" className="text-foreground">Sandy</option>
+                              <option value="silt" className="text-foreground">Silt</option>
+                              <option value="clay-loam" className="text-foreground">Clay Loam</option>
+                              <option value="sandy-loam" className="text-foreground">Sandy Loam</option>
+                            </select>
+                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                          </div>
+                          
+                          <button 
+                            type="button" 
+                            onClick={() => setShowMapModal(true)}
+                            className={`w-full flex items-center justify-center py-3 border-2 ${pinnedLocation ? 'border-primary bg-primary/10 text-primary' : 'border-dashed border-primary/50 text-primary hover:bg-primary/5'} rounded-xl transition-colors text-sm font-semibold`}
+                          >
+                            {pinnedLocation ? (
+                              <><Check className="w-4 h-4 mr-2" /> Location Pinned ({pinnedLocation.lat.toFixed(2)}, {pinnedLocation.lng.toFixed(2)})</>
+                            ) : (
+                              <><MapPin className="w-4 h-4 mr-2" /> Pin Location on Map</>
+                            )}
                           </button>
                         </div>
                       </>
@@ -243,19 +365,38 @@ export default function Auth() {
                             <div className="relative">
                               <select required className={selectClass} defaultValue="">
                                 <option value="" disabled>Land Status</option>
-                                <option value="owner">Owner</option>
-                                <option value="tenant">Tenant</option>
-                                <option value="lease">Lease</option>
+                                <option value="owner" className="text-foreground">Owner</option>
+                                <option value="tenant" className="text-foreground">Tenant</option>
+                                <option value="lease" className="text-foreground">Lease</option>
                               </select>
                               <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                             </div>
 
                           </div>
                           
-                          <input type="text" placeholder="Soil Type (Optional)" className={inputClass} />
+                          <div className="relative">
+                            <select required className={selectClass} defaultValue="">
+                              <option value="" disabled>Select Soil Type</option>
+                              <option value="loam" className="text-foreground">Loam</option>
+                              <option value="clay" className="text-foreground">Clay</option>
+                              <option value="sandy" className="text-foreground">Sandy</option>
+                              <option value="silt" className="text-foreground">Silt</option>
+                              <option value="clay-loam" className="text-foreground">Clay Loam</option>
+                              <option value="sandy-loam" className="text-foreground">Sandy Loam</option>
+                            </select>
+                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                          </div>
                           
-                          <button type="button" className="w-full flex items-center justify-center py-3 border-2 border-dashed border-primary/50 rounded-xl text-primary hover:bg-primary/5 transition-colors text-sm font-semibold">
-                            <MapPin className="w-4 h-4 mr-2" /> Pin Farm on Map
+                          <button 
+                            type="button" 
+                            onClick={() => setShowMapModal(true)}
+                            className={`w-full flex items-center justify-center py-3 border-2 ${pinnedLocation ? 'border-primary bg-primary/10 text-primary' : 'border-dashed border-primary/50 text-primary hover:bg-primary/5'} rounded-xl transition-colors text-sm font-semibold`}
+                          >
+                            {pinnedLocation ? (
+                              <><Check className="w-4 h-4 mr-2" /> Farm Pinned ({pinnedLocation.lat.toFixed(2)}, {pinnedLocation.lng.toFixed(2)})</>
+                            ) : (
+                              <><MapPin className="w-4 h-4 mr-2" /> Pin Farm on Map</>
+                            )}
                           </button>
                         </div>
                       </>
@@ -326,9 +467,9 @@ export default function Auth() {
           <AnimatePresence mode="wait">
             {isLogin ? (
               <motion.div key="login-overlay" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col items-center">
-                <h2 className="text-4xl font-bold mb-4 tracking-tight">KontratAni!</h2>
-                <p className="text-primary-foreground/90 mb-8 px-4 leading-relaxed font-medium">
-                  Enter your personal details and start your journey with us as a Farmer, Buyer, or Cooperative.
+                <h2 className="text-4xl font-bold mb-4 tracking-tight">PalAI!</h2>
+                <p className="text-primary-foreground/100 mb-6 px-10 leading-relaxed font-medium italic">
+                  Hindi masasayang ang palay, protektado ang hanap buhay!
                 </p>
                 <button onClick={toggleMode} className="px-12 py-3 border-2 border-primary-foreground rounded-full font-bold tracking-wider hover:bg-primary-foreground hover:text-primary transition-all duration-300 shadow-lg">
                   SIGN UP
