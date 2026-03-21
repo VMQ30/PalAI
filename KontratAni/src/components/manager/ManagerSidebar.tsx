@@ -12,11 +12,11 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { id: "profile", label: "Profile & Land", icon: User },
+  { id: "ai-reports", label: "AI Reports", icon: BarChart3 },
   { id: "inbox", label: "Contract Inbox", icon: Inbox },
   { id: "allocation", label: "Quota Allocation", icon: Sliders },
   { id: "sms-hub", label: "SMS & Monitoring", icon: MessageSquare },
   { id: "payouts", label: "Payouts", icon: Wallet },
-  { id: "ai-reports", label: "AI Reports", icon: BarChart3 },
 ];
 
 export function ManagerSidebar() {
