@@ -188,7 +188,6 @@ export function QuotaAllocationView() {
     toast.success("SMS Broadcast sent to all assigned farmers!");
   };
 
-  // ── Empty state ────────────────────────────────────────────────────────────
   if (acceptedContracts.length === 0) {
     return (
       <div className="space-y-6">
