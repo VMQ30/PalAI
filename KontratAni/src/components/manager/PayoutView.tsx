@@ -15,6 +15,8 @@ import { Wallet, Check, Banknote, Smartphone, ArrowDownToLine,
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 
+const BROADCAST_KEY = 'kontratani_broadcast';
+
 export function PayoutView() {
   const contracts = useAppStore((s) => s.contracts);
   const fundedContracts = contracts.filter(c => c.escrowAmount > 0 && c.matchedCooperative);
@@ -35,16 +37,34 @@ export function PayoutView() {
   const perFarmerAmount = contract ? Math.floor(contract.escrowAmount / farmers.length) : 0;
   const totalDistributed = paidFarmers.size * perFarmerAmount;
 
-  // ── NEW: derive payout eligibility from verification fields ─────────────────
-  // A payout should only be distributable when:
-  //   1. The buyer has explicitly confirmed delivery (buyerConfirmedDelivery)
-  //   2. There is no active dispute (disputeFlag)
-  // Without this gate, a manager could distribute escrow on an unconfirmed or
-  // disputed contract, releasing funds before the buyer's dual sign-off.
-  const isEscrowFrozen   = contract?.disputeFlag ?? false;
-  const isBuyerConfirmed = contract?.buyerConfirmedDelivery ?? false;
-  const isPayoutEligible = isBuyerConfirmed && !isEscrowFrozen;
-  // ── END ────────────────────────────────────────────────────────────────────
+  const buildSmsText = (
+    farmerFirstName: string,
+    amount: number,
+    method: string,
+  ): string => {
+    const methodLabel: Record<string, string> = {
+      gcash: 'GCash',
+      maya: 'Maya',
+      cash: 'Cash',
+    };
+
+    if (method === 'cash') {
+      return [
+        `[KontratAni] 💰 Hi ${farmerFirstName}! Your payment of ₱${amount.toLocaleString()} is ready for pick-up. Please visit the KontratAni office to claim your cash payout. 🏢`,
+        ``,
+        `Kumusta ${farmerFirstName}! Ang inyong bayad na ₱${amount.toLocaleString()} ay handa na. Mangyaring pumunta sa opisina ng KontratAni para kunin ang inyong bayad sa cash. 🏢`,
+      ].join('\n');
+    }
+
+    const label = methodLabel[method] ?? method;
+    return [
+      `[KontratAni] 💸 Hi ${farmerFirstName}! Your payment of ₱${amount.toLocaleString()} has been sent to your ${label} account. Please check your ${label} wallet. ✅`,
+      ``,
+      `Kumusta ${farmerFirstName}! Ang inyong bayad na ₱${amount.toLocaleString()} ay naipadala na sa inyong ${label} account. Mangyaring suriin ang inyong ${label} wallet. ✅`,
+    ].join('\n');
+  };
+
+  const JUAN_ID = 'f1';
 
   const handleDistribute = () => {
     // ── NEW: guard clause — block distribution if not buyer-confirmed or disputed
@@ -62,8 +82,25 @@ export function PayoutView() {
     setDistributing(true);
     farmers.forEach((f, i) => {
       setTimeout(() => {
+        const method = payoutMethods[f.id] || 'gcash';
+        const firstName = f.name.split(' ')[0];
+
+        // Only send the SMS broadcast to Juan dela Cruz
+        if (f.id === JUAN_ID) {
+          const smsText = buildSmsText(firstName, perFarmerAmount, method);
+          localStorage.setItem(
+            BROADCAST_KEY,
+            JSON.stringify({
+              id: `payout-${f.id}-${Date.now()}`,
+              text: smsText,
+              time: new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' }),
+            }),
+          );
+        }
+
         setPaidFarmers(prev => new Set([...prev, f.id]));
         setWalletBalance(prev => prev + perFarmerAmount);
+
         if (i === farmers.length - 1) {
           setDistributing(false);
           toast.success('All payouts distributed successfully!');
@@ -100,15 +137,20 @@ export function PayoutView() {
       {/* Contract Selector */}
       <div className="flex gap-2">
         {fundedContracts.map(c => (
-          <Button key={c.id} variant={selectedContract === c.id ? 'default' : 'outline'} size="sm" onClick={() => {
-            setSelectedContract(c.id);
-            setPaidFarmers(new Set());
-            setWalletBalance(0);
-            const fa = c.matchedCooperative?.members || [];
-            const init: Record<string, string> = {};
-            fa.forEach(f => { init[f.id] = f.payoutMethod; });
-            setPayoutMethods(init);
-          }}>
+          <Button
+            key={c.id}
+            variant={selectedContract === c.id ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => {
+              setSelectedContract(c.id);
+              setPaidFarmers(new Set());
+              setWalletBalance(0);
+              const fa = c.matchedCooperative?.members || [];
+              const init: Record<string, string> = {};
+              fa.forEach(f => { init[f.id] = f.payoutMethod; });
+              setPayoutMethods(init);
+            }}
+          >
             {c.crop}
             {/* ── NEW: append status indicator to contract tab ────────────────── */}
             {c.disputeFlag && (
@@ -182,11 +224,14 @@ export function PayoutView() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Escrow Balance</p>
-                    <p className="font-display text-xl font-bold text-foreground">₱{contract.escrowAmount.toLocaleString()}</p>
+                    <p className="font-display text-xl font-bold text-foreground">
+                      ₱{contract.escrowAmount.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
+
             <Card>
               <CardContent className="p-5">
                 <div className="flex items-center gap-3">
@@ -195,11 +240,14 @@ export function PayoutView() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Per Farmer</p>
-                    <p className="font-display text-xl font-bold text-foreground">₱{perFarmerAmount.toLocaleString()}</p>
+                    <p className="font-display text-xl font-bold text-foreground">
+                      ₱{perFarmerAmount.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
+
             <Card>
               <CardContent className="p-5">
                 <div className="flex items-center gap-3">
@@ -252,24 +300,29 @@ export function PayoutView() {
                         <TableCell>
                           <Select
                             value={payoutMethods[f.id] || 'gcash'}
-                            onValueChange={(v) => setPayoutMethods(prev => ({ ...prev, [f.id]: v }))}
-                            // ── MODIFIED: also disable select when escrow is frozen or unconfirmed ─
-                            // previous: disabled={isPaid}
-                            disabled={isPaid || !isPayoutEligible}
-                            // ── END ────────────────────────────────────────────────────────────────
+                            onValueChange={(v) =>
+                              setPayoutMethods(prev => ({ ...prev, [f.id]: v }))
+                            }
+                            disabled={isPaid}
                           >
                             <SelectTrigger className="w-28">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="gcash">
-                                <span className="flex items-center gap-1.5"><Smartphone className="h-3 w-3" /> GCash</span>
+                                <span className="flex items-center gap-1.5">
+                                  <Smartphone className="h-3 w-3" /> GCash
+                                </span>
                               </SelectItem>
                               <SelectItem value="maya">
-                                <span className="flex items-center gap-1.5"><Smartphone className="h-3 w-3" /> Maya</span>
+                                <span className="flex items-center gap-1.5">
+                                  <Smartphone className="h-3 w-3" /> Maya
+                                </span>
                               </SelectItem>
                               <SelectItem value="cash">
-                                <span className="flex items-center gap-1.5"><Banknote className="h-3 w-3" /> Cash</span>
+                                <span className="flex items-center gap-1.5">
+                                  <Banknote className="h-3 w-3" /> Cash
+                                </span>
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -282,20 +335,9 @@ export function PayoutView() {
                               </Badge>
                             </motion.div>
                           ) : (
-                            // ── MODIFIED: badge reflects frozen/awaiting states ──────────────────
-                            // previous: always showed "Pending" regardless of escrow lock state.
-                            isEscrowFrozen ? (
-                              <Badge variant="outline" className="border-red-200 text-red-600">
-                                <Lock className="mr-1 h-3 w-3" /> Frozen
-                              </Badge>
-                            ) : !isBuyerConfirmed ? (
-                              <Badge variant="outline" className="border-amber-200 text-amber-600">
-                                <Hourglass className="mr-1 h-3 w-3" /> Awaiting
-                              </Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-muted-foreground">Pending</Badge>
-                            )
-                            // ── END ──────────────────────────────────────────────────────────────
+                            <Badge variant="outline" className="text-muted-foreground">
+                              Pending
+                            </Badge>
                           )}
                         </TableCell>
                       </TableRow>
@@ -317,17 +359,12 @@ export function PayoutView() {
             onClick={handleDistribute}
             disabled={distributing || paidFarmers.size === farmers.length || !isPayoutEligible}
           >
-            {isEscrowFrozen ? (
-              <><ShieldAlert className="h-4 w-4" /> Payouts Locked — Dispute Active</>
-            ) : !isBuyerConfirmed ? (
-              <><Hourglass className="h-4 w-4" /> Waiting for Buyer Confirmation</>
-            ) : paidFarmers.size === farmers.length ? (
-              <><Check className="h-4 w-4" /> All Payouts Complete</>
-            ) : distributing ? (
-              <><Wallet className="h-4 w-4" /> Distributing...</>
-            ) : (
-              <><Wallet className="h-4 w-4" /> Distribute Payouts</>
-            )}
+            <Wallet className="h-4 w-4" />
+            {paidFarmers.size === farmers.length
+              ? 'All Payouts Complete'
+              : distributing
+              ? 'Distributing...'
+              : 'Distribute Payouts'}
           </Button>
           {/* ── END ────────────────────────────────────────────────────────────── */}
         </>
