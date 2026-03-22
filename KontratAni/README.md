@@ -23,8 +23,6 @@ This application was originally developed for a hackathon to demonstrate innovat
 - *Buyer Dashboard*: Contract views, demand management, payments overview, and dashboard analytics.
 - *Manager Dashboard*: Contract inbox, quota allocation, payout management, SMS hub, and land profile views.
 - *AI Integration*: Chatbots for contract assistance and automated report generation.
-- *Mobile Support*: Dedicated mobile view with SMS functionality.
-- *Responsive Design*: Built with Tailwind CSS for cross-device compatibility.
 
 ## Tech Stack
 
