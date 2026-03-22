@@ -177,7 +177,17 @@ const MilestoneStepper = () => {
                 )}
               </div>
 
-              {/* ... Labels and details continue here ... */}
+              {/* LABELS AND DETAILS */}
+              <div className="mt-2 text-center">
+                <span
+                  className={`text-xs font-medium ${s.done || s.active ? "text-heading" : "text-muted-foreground"}`}
+                >
+                  {s.label}
+                </span>
+                {s.detail && (
+                  <p className="text-xs text-primary">{s.detail}</p>
+                )}
+              </div>
             </div>
           );
         })}
