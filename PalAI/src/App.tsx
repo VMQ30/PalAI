@@ -10,7 +10,7 @@ import BuyerLayout from "@/components/buyer/BuyerLayout.tsx";
 import Manager from "@/components/manager/Manager.tsx";
 import { FarmerLayout } from "@/components/farmer/FarmerLayout.tsx";
 import MobileView from "@/components/mobile/MobileView.tsx";
-import KontratAniApp from "@/components/simulator/KontratAniApp.tsx";
+import PalAIApp from "@/components/simulator/PalAIApp.tsx";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +28,7 @@ const AnimatedRoutes = () => {
         <Route path="/mobile-view" element={<MobileView />} />
 
         {/* Simulator — single entry point, persona switcher lives inside */}
-        <Route path="/simulator" element={<KontratAniApp />} />
+        <Route path="/simulator" element={<PalAIApp />} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

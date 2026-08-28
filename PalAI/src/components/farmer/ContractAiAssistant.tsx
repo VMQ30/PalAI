@@ -177,7 +177,7 @@ export function ContractAiAssistant() {
   // Persist last analysis timestamp
   useEffect(() => {
     localStorage.setItem(
-      "kontratani_ai_last_analysis",
+      "palai_ai_last_analysis",
       new Date().toISOString(),
     );
   }, [insights]);

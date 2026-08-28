@@ -7,7 +7,7 @@ import {
   Send, DollarSign, User, CheckCircle2, XCircle, MessageSquare
 } from 'lucide-react';
 
-const SMS_STATUS_KEY = 'kontratani_sms_status';
+const SMS_STATUS_KEY = 'palai_sms_status';
 
 export default function FarmerPortal() {
   const {

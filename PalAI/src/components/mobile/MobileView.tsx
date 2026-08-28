@@ -24,9 +24,9 @@ interface Message {
   isBroadcast?: boolean;
 }
 
-const STORAGE_KEY = 'kontratani_broadcast';
-const CROP_STATUS_KEY = 'kontratani_crop_status';
-const SMS_STATUS_KEY = 'kontratani_sms_status';
+const STORAGE_KEY = 'palai_broadcast';
+const CROP_STATUS_KEY = 'palai_crop_status';
+const SMS_STATUS_KEY = 'palai_sms_status';
 
 // ─── Menus ────────────────────────────────────────────────────────────────────
 
@@ -380,7 +380,7 @@ export default function MobileView() {
           lang === "en"
             ? "✅ You have accepted the planting contract. Your coordinator has been notified. 🌾"
             : "✅ Tinanggap ninyo ang kontrata sa pagtatanim. Naabisuhan na ang inyong coordinator. 🌾",
-          "kontratani"
+          "palai"
         );
       } else if (val === "0") {
         const cid = broadcastContractId ?? activeContract?.id;
@@ -401,11 +401,11 @@ export default function MobileView() {
           lang === "en"
             ? "You have declined the contract. Your coordinator has been informed."
             : "Tinangggi ninyo ang kontrata. Naabisuhan na ang inyong coordinator.",
-          "kontratani"
+          "palai"
         );
       } else {
         // Invalid — stay in broadcast_response and ask again
-        addMsg(INVALID[lang], "kontratani");
+        addMsg(INVALID[lang], "palai");
         return;
       }
 
@@ -416,21 +416,21 @@ export default function MobileView() {
       // Show the appropriate menu for the return step
       setTimeout(() => {
         if (returnStep === "lang") {
-          addMsg(LANG_PROMPT, "kontratani");
+          addMsg(LANG_PROMPT, "palai");
         } else if (returnStep === "main") {
-          addMsg(MAIN_MENU[lang], "kontratani");
+          addMsg(MAIN_MENU[lang], "palai");
         } else if (returnStep === "complaint") {
-          addMsg(COMPLAINT_MENU[lang], "kontratani");
+          addMsg(COMPLAINT_MENU[lang], "palai");
         } else if (returnStep === "support") {
-          addMsg(SUPPORT_MENU[lang], "kontratani");
+          addMsg(SUPPORT_MENU[lang], "palai");
         } else if (returnStep === "contract") {
-          addMsg(CONTRACT_MENU[lang], "kontratani");
+          addMsg(CONTRACT_MENU[lang], "palai");
         } else if (returnStep === "crop_info") {
-          addMsg(getCropInfoMsg(lang), "kontratani");
+          addMsg(getCropInfoMsg(lang), "palai");
         } else {
           // For mid-flow steps (detail, urgency, etc.) just go back to main
           setStep("main");
-          addMsg(MAIN_MENU[lang], "kontratani");
+          addMsg(MAIN_MENU[lang], "palai");
         }
       }, 700);
       return;
@@ -675,7 +675,7 @@ export default function MobileView() {
                 style={{
                   ...(msg.from === "farmer"
                     ? styles.farmerBubble
-                    : styles.kontrataniBubble),
+                    : styles.palaiBubble),
                   ...(msg.isBroadcast ? styles.broadcastBubble : {}),
                 }}
               >
@@ -791,7 +791,7 @@ const styles: Record<string, React.CSSProperties> = {
     overflowY: "auto" as const,
     padding: "16px 14px",
   },
-  kontrataniBubble: {
+  palaiBubble: {
     background: "#f0f0f0",
     color: "#111",
     padding: "11px 14px",
