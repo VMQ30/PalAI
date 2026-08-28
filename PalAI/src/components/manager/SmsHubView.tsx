@@ -93,7 +93,7 @@ const BROADCAST_TEMPLATES = [
   },
 ];
 
-const STORAGE_KEY = "kontratani_broadcast";
+const STORAGE_KEY = "palai_broadcast";
 
 export function SmsHubView() {
   const contracts = useAppStore((s) => s.contracts);

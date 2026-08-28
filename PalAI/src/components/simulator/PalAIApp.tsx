@@ -4,7 +4,7 @@ import BuyerPortal from './BuyerPortal';
 import FarmerPortal from './FarmerPortal';
 import { Sprout, Building2, Users, Tractor } from 'lucide-react';
 
-export default function KontratAniApp() {
+export default function PalAIApp() {
   const { activePersona, switchPersona } = useAppStore();
 
   return (
@@ -19,7 +19,7 @@ export default function KontratAniApp() {
               <Sprout className="text-white" size={20} />
             </div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-emerald-700 to-emerald-500">
-              KontratAni
+              PalAI
             </span>
           </div>
 

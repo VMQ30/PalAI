@@ -1,12 +1,12 @@
-# PalayAI
+# PalAI
 
 ## Overview
 
-KontratAni is a modern web application built with React, TypeScript, Vite, and ShadCN UI components. It serves as a comprehensive platform that connects farmers, buyers, and cooperative managers to streamline contract management, payments, and agricultural operations. The app features role-based dashboards, AI-powered assistants, and mobile-friendly interfaces to facilitate efficient communication and transactions in the agricultural supply chain.
+PalAI is a modern web application built with React, TypeScript, Vite, and ShadCN UI components. It serves as a comprehensive platform that connects farmers, buyers, and cooperative managers to streamline contract management, payments, and agricultural operations. The app features role-based dashboards, AI-powered assistants, and mobile-friendly interfaces to facilitate efficient communication and transactions in the agricultural supply chain.
 
 ## Purpose
 
-The primary purpose of KontratAni is to bridge the gap between farmers and agricultural companies by providing a digital platform for:
+The primary purpose of PalAI is to bridge the gap between farmers and agricultural companies by providing a digital platform for:
 
 - *Contract Creation and Management*: Farmers and buyers can create, negotiate, and manage contracts digitally.
 - *Payment Processing*: Secure and transparent payment tracking and direct payouts.
@@ -49,13 +49,13 @@ This application was originally developed for a hackathon to demonstrate innovat
 
    
    git clone <repository-url>
-   cd kontratani
+   cd palai
    
 
 2. Navigate to the project directory:
 
    
-   cd KontratAni
+   cd PalAI
    
 
 3. Install dependencies:
