@@ -4,7 +4,8 @@ import Providers from "./providers";
 
 export const metadata: Metadata = {
   title: "PalAI - Agricultural Supply Chain Platform",
-  description: "Connect farmers, buyers, and cooperative managers to streamline contract management and payments.",
+  description:
+    "Connect farmers, buyers, and cooperative managers to streamline contract management and payments.",
 };
 
 export default function RootLayout({
