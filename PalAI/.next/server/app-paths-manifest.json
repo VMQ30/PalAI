@@ -1,0 +1,6 @@
+{
+  "/coop-dashboard/page": "app/coop-dashboard/page.js",
+  "/buyer-dashboard/page": "app/buyer-dashboard/page.js",
+  "/farmer-dashboard/page": "app/farmer-dashboard/page.js",
+  "/page": "app/page.js"
+}

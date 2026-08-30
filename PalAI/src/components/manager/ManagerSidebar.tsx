@@ -1,4 +1,6 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/useAppStore";
 import {
   User,
@@ -19,19 +21,19 @@ const navItems = [
   { id: "inbox", label: "Contract Inbox", icon: Inbox },
   { id: "ai-tracker", label: "AI Contract Tracker", icon: Brain },
   { id: "allocation", label: "Quota Allocation", icon: Sliders },
-  {id: "contract progress", label: "Contract Progress", icon: Sprout},
+  { id: "contract progress", label: "Contract Progress", icon: Sprout},
   { id: "sms-hub", label: "SMS & Monitoring", icon: MessageSquare },
   { id: "payouts", label: "Payouts", icon: Wallet },
 ];
 
 export function ManagerSidebar() {
   const { activeView, setActiveView } = useAppStore();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   // Reusable logout function
   const handleLogout = () => {
     localStorage.removeItem("palai_user_role");
-    navigate("/");
+    router.push("/");
   };
 
   return (

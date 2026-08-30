@@ -172,7 +172,7 @@ function ContractStatusStrip({ contractId }: { contractId: string }) {
 }
 
 export function DemoControlPanel() {
-  const [pos, setPos] = useState({ x: 20, y: window.innerHeight - 520 });
+  const [pos, setPos] = useState({ x: 20, y: typeof window !== "undefined" ? window.innerHeight - 520 : 200 });
   const [size, setSize] = useState({ w: 360, h: 520 });
 
   const dragOrigin = useRef<{
@@ -499,8 +499,8 @@ export function DemoControlPanel() {
   };
   const clampForPanel = useCallback(
     (p: { x: number; y: number }) => ({
-      x: Math.max(0, Math.min(window.innerWidth - size.w, p.x)),
-      y: Math.max(0, Math.min(window.innerHeight - size.h, p.y)),
+      x: Math.max(0, Math.min((typeof window !== "undefined" ? window.innerWidth : 1000) - size.w, p.x)),
+      y: Math.max(0, Math.min((typeof window !== "undefined" ? window.innerHeight : 800) - size.h, p.y)),
     }),
     [size.w, size.h],
   );

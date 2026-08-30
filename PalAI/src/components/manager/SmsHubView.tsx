@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState } from "react";
 import {
   Card,
@@ -51,6 +53,11 @@ const statusConfig: Record<
     label: "Harvested",
     color: "bg-forest/15 text-forest border-forest/30",
     mapColor: "bg-forest",
+  },
+  declined: {
+    label: "Declined",
+    color: "bg-destructive/15 text-destructive border-destructive/30",
+    mapColor: "bg-destructive",
   },
 };
 
@@ -131,7 +138,7 @@ export function SmsHubView() {
     if (activeTemplate) setEditableMessage(activeTemplate[l]);
   };
 
-  const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
+  const MAPTILER_KEY = process.env.NEXT_PUBLIC_MAPTILER_KEY || (typeof process !== "undefined" ? process.env.VITE_MAPTILER_KEY : "");
   const MAP_STYLE = `https://api.maptiler.com/maps/satellite/style.json?key=${MAPTILER_KEY}`;
   const TERRAIN_URL = `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${MAPTILER_KEY}`;
 
@@ -238,7 +245,7 @@ export function SmsHubView() {
     harvested: farmers.filter((f) => f.smsStatus === "harvested").length,
   };
 
-  if (activeContracts.length === 0) {
+  if (activeContracts.length === 0 || !contract) {
     return (
       <div className="space-y-6">
         <div>
@@ -262,6 +269,7 @@ export function SmsHubView() {
   }
 
   const coop = contract.matchedCooperative;
+  const members = coop?.members || [];
   
   const statusColorMap: Record<string, { color: string; label: string }> = {
     pending: { color: "#e4e3df", label: "Pending" },
@@ -271,9 +279,9 @@ export function SmsHubView() {
     harvested: { color: "#22c55e", label: "Harvested" },
   };
 
-  const plots = coop.members.map((farmer) => ({
+  const plots = members.map((farmer) => ({
     name: `${farmer.name.split(" ")[0]}'s Plot`,
-    yield: `${Math.round(contract.volumeKg / coop.members.length)} kg est.`,
+    yield: `${members.length ? Math.round(contract.volumeKg / members.length) : 0} kg est.`,
     status: statusColorMap[farmer.smsStatus]?.label || "Unknown",
   }));
 

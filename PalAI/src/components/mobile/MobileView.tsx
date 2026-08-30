@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useRef, useEffect } from "react";
 import { useAppStore } from "@/store/useAppStore";
 import type { CropStatus, FarmerSmsStatus } from "@/store/useAppStore";
@@ -20,7 +22,7 @@ type Step =
 interface Message {
   id: number;
   text: string;
-  from: "PalAi" | "farmer";
+  from: "PalAi" | "farmer" | "palai";
   isBroadcast?: boolean;
 }
 
@@ -164,7 +166,6 @@ export default function MobileView() {
   const contracts = useAppStore((s) => s.contracts);
   const updateCropStatus = useAppStore((s) => s.updateCropStatus);
   const updateFarmerSmsStatus = useAppStore((s) => s.updateFarmerSmsStatus);
-  const updateUserSmsStatus   = useAppStore((s) => s.updateUserSmsStatus);
   const cooperatives          = useAppStore((s) => s.cooperatives);
 
   const farmer = cooperatives
@@ -337,7 +338,7 @@ export default function MobileView() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const addMsg = (text: string, from: "PalAi" | "farmer") => {
+  const addMsg = (text: string, from: "PalAi" | "farmer" | "palai") => {
     setMessages((prev) => [
       ...prev,
       { id: Date.now() + Math.random(), text, from },
@@ -360,8 +361,6 @@ export default function MobileView() {
         const cid = broadcastContractId ?? activeContract?.id;
         if (cid) {
           updateFarmerSmsStatus(cid, FARMER_ID, "planted");
-          // ✅ Also update the users array (farmer_01) so member ledger reflects it
-          updateUserSmsStatus(USER_ID, "planted");
           localStorage.setItem(CROP_STATUS_KEY, JSON.stringify({
             contractId: cid,
             cropStatus: "seeds_planted",
@@ -371,7 +370,7 @@ export default function MobileView() {
           localStorage.setItem(SMS_STATUS_KEY, JSON.stringify({
             contractId: cid,
             farmerId: FARMER_ID,
-            userId: USER_ID,
+            userId: FARMER_ID,
             smsStatus: "planted",
             ts: Date.now(),
           }));
@@ -386,13 +385,11 @@ export default function MobileView() {
         const cid = broadcastContractId ?? activeContract?.id;
         if (cid) {
           updateFarmerSmsStatus(cid, FARMER_ID, "declined" as FarmerSmsStatus);
-          // ✅ Also update the users array (farmer_01) so member ledger reflects it
-          updateUserSmsStatus(USER_ID, "declined");
           // ✅ Sync SMS status to farmer portal tab via localStorage
           localStorage.setItem(SMS_STATUS_KEY, JSON.stringify({
             contractId: cid,
             farmerId: FARMER_ID,
-            userId: USER_ID,
+            userId: FARMER_ID,
             smsStatus: "declined",
             ts: Date.now(),
           }));
@@ -505,7 +502,7 @@ export default function MobileView() {
         }));
 
         const labelMap = CROP_STATUS_LABELS[lang];
-        const newLabel = labelMap[CROP_STATUS_ORDER.indexOf(newStatus)];
+        const newLabel = labelMap[CROP_STATUS_ORDER.indexOf(newStatus as any)];
         const confirm =
           lang === "en"
             ? `✅ Status updated to: ${newLabel}\n\nThank you, Juan! Your coordinator has been notified. 🌾`

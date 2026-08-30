@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { FarmerSidebar } from "@/components/farmer/FarmerSidebar";
 import { FarmerMobileNav } from "@/components/farmer/FarmerMobileNav";
@@ -9,7 +11,7 @@ import { AiReportView } from "@/components/manager/AiReportView";
 import { AiChatbot } from "@/components/manager/AiChatbot";
 import { ContractAiAssistant } from "@/components/manager/ContractAiAssistant";
 import { DirectPayoutView } from "./DirectPayoutView";
-import { DemoControlPanel } from "@/components/DemoControlPanel.tsx";
+import { DemoControlPanel } from "@/components/DemoControlPanel";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function FarmerLayout() {

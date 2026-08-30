@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { useAppStore } from '@/store/useAppStore';
 import { BuyerSidebar } from './BuyerSidebar';
@@ -5,7 +7,7 @@ import { DashboardView } from './DashboardView';
 import { DemandView } from './DemandView';
 import { ContractsView } from './ContractsView';
 import { PaymentsView } from './PaymentsView';
-import { DemoControlPanel } from "@/components/DemoControlPanel.tsx";
+import { DemoControlPanel } from "@/components/DemoControlPanel";
 
 export default function BuyerLayout() {
   const { activeView } = useAppStore();
