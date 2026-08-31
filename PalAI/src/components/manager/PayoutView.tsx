@@ -316,7 +316,7 @@ export function PayoutView() {
                       <TableRow key={f.id}>
                         <TableCell className="font-medium">{f.name}</TableCell>
                         <TableCell className="text-muted-foreground">
-                          {f.location}
+                          {f.region}
                         </TableCell>
                         <TableCell className="font-semibold">
                           ₱{perFarmerAmount.toLocaleString()}

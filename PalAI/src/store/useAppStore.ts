@@ -147,6 +147,15 @@ export interface BroadcastMessage {
   time: string;
 }
 
+export interface CropHistory {
+  id: string;
+  crop: string;
+  yieldKg: number;
+  plantingDate: string;
+  harvestDate?: string;
+  notes?: string;
+}
+
 // ── Combined state ────────────────────────────────────────────────────────────
 interface AppState {
   // ── useAppStore state ──────────────────────────────────────────────────────
@@ -159,6 +168,7 @@ interface AppState {
   users: User[]; // For syncing Farmer smsStatus with useStore users
   farmPlots: FarmPlot[]; // For syncing Farmer smsStatus with useStore farmPlots
   broadcastMessages: BroadcastMessage[];
+  cropHistory: CropHistory[];
   activePersona: string;
 
   switchPersona: (persona: string) => void;
@@ -204,6 +214,9 @@ interface AppState {
   resolveDispute: (contractId: string) => void;
   resetContracts: () => void;
   updateContract: (contractId: string, partial: Partial<Contract>) => void;
+  addCropHistory: (item: Omit<CropHistory, "id">) => void;
+  removeCropHistory: (id: string) => void;
+  updateCropHistory: (id: string, partial: Partial<CropHistory>) => void;
 }
 
 // ── Mock farmers ──────────────────────────────────────────────────────────────
@@ -658,6 +671,50 @@ const mockContracts: Contract[] = [
   },
 ];
 
+// ── Mock crop history ─────────────────────────────────────────────────────────
+const mockCropHistory: CropHistory[] = [
+  {
+    id: "ch1",
+    crop: "Kamatis (Tomatoes)",
+    yieldKg: 4500,
+    plantingDate: "2025-10-15",
+    harvestDate: "2026-01-20",
+    notes: "High yield season with optimal rainfall. Grade A harvest.",
+  },
+  {
+    id: "ch2",
+    crop: "Sibuyas (Onions)",
+    yieldKg: 3200,
+    plantingDate: "2025-11-01",
+    harvestDate: "2026-02-15",
+    notes: "Stored in cold storage facility; zero pest infestation recorded.",
+  },
+  {
+    id: "ch3",
+    crop: "Mais (Yellow Corn)",
+    yieldKg: 6000,
+    plantingDate: "2025-08-01",
+    harvestDate: "2025-11-10",
+    notes: "Contract fulfilled for feeds manufacturer.",
+  },
+  {
+    id: "ch4",
+    crop: "Pechay (Bok Choy)",
+    yieldKg: 950,
+    plantingDate: "2026-01-05",
+    harvestDate: "2026-02-12",
+    notes: "Short crop rotation cycle between main harvests.",
+  },
+  {
+    id: "ch5",
+    crop: "Saging (Banana)",
+    yieldKg: 4100,
+    plantingDate: "2025-03-10",
+    harvestDate: "2026-01-05",
+    notes: "Cavendish variety delivered to Metro Fresh Foods.",
+  },
+];
+
 export const VERIFIED_PROGRESS_MAP: Record<CropStatus, number> = {
   pending: 0,
   seeds_planted: 25,
@@ -683,6 +740,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   broadcastMessages: [],
   farmPlots: [], // Initialize as empty; will sync with useStore for smsStatus
   activePersona: "buyer",
+  cropHistory: mockCropHistory,
 
   switchPersona: (persona) => set({ activePersona: persona }),
   allocateQuota: (contractId) => {
@@ -1046,6 +1104,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   resetContracts: () => {
     set({
       contracts: JSON.parse(JSON.stringify(mockContracts)),
+      cropHistory: JSON.parse(JSON.stringify(mockCropHistory)),
       selectedContractId: null,
     });
   },
@@ -1053,6 +1112,26 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((s) => ({
       contracts: s.contracts.map((c) =>
         c.id === contractId ? { ...c, ...partial } : c,
+      ),
+    }));
+  },
+
+  addCropHistory: (item) => {
+    const newItem: CropHistory = {
+      id: `ch-${Date.now()}`,
+      ...item,
+    };
+    set((state) => ({ cropHistory: [...state.cropHistory, newItem] }));
+  },
+  removeCropHistory: (id) => {
+    set((state) => ({
+      cropHistory: state.cropHistory.filter((item) => item.id !== id),
+    }));
+  },
+  updateCropHistory: (id, partial) => {
+    set((state) => ({
+      cropHistory: state.cropHistory.map((item) =>
+        item.id === id ? { ...item, ...partial } : item,
       ),
     }));
   },

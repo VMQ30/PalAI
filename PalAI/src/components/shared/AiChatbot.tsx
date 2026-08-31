@@ -184,7 +184,7 @@ Total escrow locked: **₱${contracts.reduce((s, c) => s + c.escrowAmount, 0).to
   ) {
     return `👥 **Your Member Farmers:**
 
-${coop?.members?.map((m: any, i: number) => `${i + 1}. **${m.name}** — ${m.hectares} ha in ${m.location} (${m.payoutMethod})`).join("\n") || "No members found."}
+${coop?.members?.map((m: any, i: number) => `${i + 1}. **${m.name}** — ${m.hectares} ha in ${m.region} (${m.payoutMethod})`).join("\n") || "No members found."}
 
 **Total:** ${coop?.members?.length || 0} farmers | **${coop?.totalHectares || 0} hectares** combined
 **Cooperative:** ${coop?.name || "N/A"} — ${coop?.region || "N/A"}`;

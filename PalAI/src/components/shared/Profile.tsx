@@ -9,8 +9,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useAppStore } from "@/store/useAppStore";
-import { MapPin, Leaf, Pencil, RotateCcwIcon } from "lucide-react";
+import { CropHistory, useAppStore } from "@/store/useAppStore";
+import { MapPin, Leaf, Pencil, History } from "lucide-react";
 import { toast } from "sonner";
 
 interface ProfileViewProps {
@@ -25,6 +25,32 @@ interface ProfileViewProps {
   soilScore?: number;
   weatherScore?: number;
   userRole: string;
+  cropHistory?: CropHistory[];
+}
+
+const ACCENT_COLORS = [
+  "border-[#15803d] dark:border-emerald-500", // Dark Green (like Rice)
+  "border-[#8C5229] dark:border-amber-600", // Warm Brown (like Corn)
+  "border-[#8BA396] dark:border-stone-400", // Muted Sage/Gray (like Mung Beans)
+  "border-teal-600 dark:border-teal-500",
+  "border-amber-700 dark:border-amber-500",
+];
+
+function formatDateLabel(dateStr?: string) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
+function formatYieldText(yieldKg?: number) {
+  if (yieldKg === undefined || yieldKg === null) return "";
+  if (yieldKg >= 1000) {
+    const tons = (yieldKg / 1000).toFixed(1);
+    const cleanTons = tons.endsWith(".0") ? tons.slice(0, -2) : tons;
+    return `${cleanTons} tons/ha`;
+  }
+  return `${yieldKg} kg/ha`;
 }
 
 export function ProfileView({
@@ -39,8 +65,11 @@ export function ProfileView({
   soilScore,
   weatherScore,
   userRole,
+  cropHistory,
 }: ProfileViewProps) {
   const [profileEdit, setProfileEdit] = useState(false);
+  const storeCropHistory = useAppStore((s) => s.cropHistory);
+  const historyToRender = cropHistory || storeCropHistory;
 
   const handleSaveProfile = () => {
     if (!name || !region || !hectares || !soilType) {
@@ -201,16 +230,53 @@ export function ProfileView({
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <RotateCcwIcon className="h-4 w-4 text-primary" />
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2.5 text-xl font-bold text-foreground">
+              <History className="h-5 w-5 text-[#15803d] dark:text-emerald-500" />
               Crop History
             </CardTitle>
             <CardDescription>
-              All of your previously planted crops
+              All of your previously planted crops & historical yield records
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6"></CardContent>
+          <CardContent className="space-y-4">
+            {historyToRender && historyToRender.length > 0 ? (
+              historyToRender.map((crop, idx) => {
+                const colorClass = ACCENT_COLORS[idx % ACCENT_COLORS.length];
+                const dateLabel = formatDateLabel(
+                  crop.harvestDate || crop.plantingDate,
+                );
+                const yieldFormatted = formatYieldText(crop.yieldKg);
+
+                return (
+                  <div
+                    key={crop.id || idx}
+                    className={`border-l-[3px] ${colorClass} pl-3.5 py-0.5`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-foreground text-base tracking-tight">
+                        {crop.crop}
+                      </h4>
+                      {dateLabel && (
+                        <span className="text-sm font-medium text-muted-foreground">
+                          {dateLabel}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {yieldFormatted ? `Yield: ${yieldFormatted}` : ""}
+                      {yieldFormatted && crop.notes ? " • " : ""}
+                      {crop.notes || ""}
+                    </p>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-sm text-muted-foreground italic">
+                No crop history available.
+              </p>
+            )}
+          </CardContent>
         </Card>
       </div>
     </div>

@@ -438,7 +438,7 @@ export function SmsHubView() {
                     <TableRow key={f.id}>
                       <TableCell className="font-medium">{f.name}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {f.location}
+                        {f.region}
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className={cfg.color}>

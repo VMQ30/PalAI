@@ -525,7 +525,7 @@ export function QuotaAllocationView() {
                           </Badge>
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {farmer.location} · {farmer.soilType}
+                          {farmer.region} · {farmer.soilType}
                         </p>
                       </div>
 
