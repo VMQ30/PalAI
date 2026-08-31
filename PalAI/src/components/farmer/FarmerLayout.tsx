@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { FarmerSidebar } from "@/components/farmer/FarmerSidebar";
 import { FarmerMobileNav } from "@/components/farmer/FarmerMobileNav";
-import { ProfileView } from "@/components/farmer/ProfileView";
+import { FarmerProfileView } from "@/components/farmer/ProfileView";
 import { ContractInboxView } from "@/components/farmer/ContractInboxView";
 import { useAppStore } from "@/store/useAppStore";
 import { ContractProgress } from "./ContractProgress";
 import { AiReportView } from "@/components/manager/AiReportView";
-import { AiChatbot } from "@/components/manager/AiChatbot";
+import { AiChatbot } from "@/components/shared/AiChatbot";
 import { ContractAiAssistant } from "@/components/manager/ContractAiAssistant";
 import { DirectPayoutView } from "./DirectPayoutView";
 import { DemoControlPanel } from "@/components/DemoControlPanel";
@@ -27,7 +27,7 @@ export function FarmerLayout() {
   const renderView = () => {
     switch (activeView) {
       case "profile":
-        return <ProfileView />;
+        return <FarmerProfileView />;
       case "inbox":
         return <ContractInboxView />;
       case "contract progress":
@@ -39,7 +39,7 @@ export function FarmerLayout() {
       case "ai-reports":
         return <AiReportView />;
       default:
-        return <ProfileView />;
+        return <FarmerProfileView />;
     }
   };
 

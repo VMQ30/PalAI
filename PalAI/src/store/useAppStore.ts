@@ -80,7 +80,7 @@ export interface Farmer {
   id: string;
   name: string;
   hectares: number;
-  location: string;
+  region: string;
   lat: number;
   lng: number;
   soilType: string;
@@ -106,7 +106,7 @@ export interface SoloFarmer {
   id: string;
   name: string;
   hectares: number;
-  location: string;
+  region: string;
   lat: number;
   lng: number;
   soilType: string;
@@ -212,7 +212,7 @@ const mockFarmers: Farmer[] = [
     id: "f1",
     name: "Juan dela Cruz",
     hectares: 2.5,
-    location: "Brgy. San Jose",
+    region: "Brgy. San Jose",
     lat: 14.58,
     lng: 121.0,
     soilType: "Loam",
@@ -225,7 +225,7 @@ const mockFarmers: Farmer[] = [
     id: "f2",
     name: "Maria Santos",
     hectares: 1.8,
-    location: "Brgy. Sta. Rosa",
+    region: "Brgy. Sta. Rosa",
     lat: 14.61,
     lng: 121.02,
     soilType: "Clay Loam",
@@ -238,7 +238,7 @@ const mockFarmers: Farmer[] = [
     id: "f3",
     name: "Pedro Reyes",
     hectares: 3.0,
-    location: "Brgy. Bagumbayan",
+    region: "Brgy. Bagumbayan",
     lat: 14.56,
     lng: 120.98,
     soilType: "Sandy Loam",
@@ -251,7 +251,7 @@ const mockFarmers: Farmer[] = [
     id: "f4",
     name: "Ana Flores",
     hectares: 2.2,
-    location: "Brgy. Maligaya",
+    region: "Brgy. Maligaya",
     lat: 14.59,
     lng: 121.04,
     soilType: "Loam",
@@ -264,7 +264,7 @@ const mockFarmers: Farmer[] = [
     id: "f5",
     name: "Ricardo Mendoza",
     hectares: 4.0,
-    location: "Brgy. Pag-asa",
+    region: "Brgy. Pag-asa",
     lat: 14.63,
     lng: 120.96,
     soilType: "Silt Loam",
@@ -318,7 +318,7 @@ const mockSoloFarmers: SoloFarmer[] = [
     id: "sf1",
     name: "Luzviminda Garcia",
     hectares: 13.5,
-    location: "Brgy. San Isidro",
+    region: "Brgy. San Isidro",
     lat: 14.57,
     lng: 121.03,
     soilType: "Loam",
@@ -331,7 +331,7 @@ const mockSoloFarmers: SoloFarmer[] = [
     id: "sf2",
     name: "Manuel Santos",
     hectares: 2.0,
-    location: "Brgy. Santa Cruz",
+    region: "Brgy. Santa Cruz",
     lat: 14.6,
     lng: 121.05,
     soilType: "Silt Loam",
@@ -366,8 +366,8 @@ const mockContracts: Contract[] = [
     volumeKg: 3000,
     targetDate: "2026-08-20",
     status: "in_progress",
-    cropStatus: "ready_for_harvest", 
-    progress: 60, 
+    cropStatus: "ready_for_harvest",
+    progress: 60,
     buyerName: "Metro Fresh Foods",
     matchedCooperative: mockCooperatives[1],
     escrowAmount: 90000,
@@ -389,7 +389,7 @@ const mockContracts: Contract[] = [
       },
       {
         cropStatus: "growing",
-        photoFileName: "", 
+        photoFileName: "",
         submittedAt: "2026-03-18T10:00:00Z",
         verificationStatus: "verified",
         verifiedAt: "2026-03-18T15:00:00Z",
@@ -675,9 +675,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   soloFarmers: mockSoloFarmers,
   activeView: "dashboard",
   selectedContractId: null,
-  confirmedAllocations: typeof window !== "undefined"
-    ? JSON.parse(localStorage.getItem("confirmedAllocations") || "[]")
-    : [],
+  confirmedAllocations:
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem("confirmedAllocations") || "[]")
+      : [],
   users: [], // Initialize as empty; will sync with useStore for smsStatus
   broadcastMessages: [],
   farmPlots: [], // Initialize as empty; will sync with useStore for smsStatus
@@ -706,7 +707,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
   updateUserSmsStatus: (userId, status) => {
     set((s) => ({
-      users: s.users.map((u) => (u.id === userId ? { ...u, smsStatus: status as any } : u)),
+      users: s.users.map((u) =>
+        u.id === userId ? { ...u, smsStatus: status as any } : u,
+      ),
     }));
   },
 
@@ -950,8 +953,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         return {
           ...c,
           cropStatus,
-          escrowAmount:
-            c.escrowAmount === 0 ? c.volumeKg * 30 : c.escrowAmount,
+          escrowAmount: c.escrowAmount === 0 ? c.volumeKg * 30 : c.escrowAmount,
           pendingBuyerConfirmation:
             cropStatus === "delivered" ? true : c.pendingBuyerConfirmation,
           milestoneEvidence: updatedEvidence,
@@ -1001,7 +1003,8 @@ export const useAppStore = create<AppState>((set, get) => ({
                 e.cropStatus === cropStatus
                   ? {
                       ...e,
-                      verificationStatus: "disputed" as MilestoneVerificationStatus,
+                      verificationStatus:
+                        "disputed" as MilestoneVerificationStatus,
                       disputeReason: reason,
                     }
                   : e,
