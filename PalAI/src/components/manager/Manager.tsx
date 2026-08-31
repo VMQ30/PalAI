@@ -7,10 +7,10 @@ import { ContractInboxView } from "@/components/manager/ContractInboxView";
 import { QuotaAllocationView } from "@/components/manager/QuotaAllocationView";
 import { SmsHubView } from "@/components/manager/SmsHubView";
 import { PayoutView } from "@/components/manager/PayoutView";
-import { AiReportView } from "@/components/manager/AiReportView";
+import { AiReportView } from "@/components/shared/AiReportView";
 import { AiChatbot } from "@/components/shared/AiChatbot";
-import { ContractAiAssistant } from "@/components/manager/ContractAiAssistant";
-import { ContractProgress } from "@/components/farmer/ContractProgress";
+import { ContractAiAssistant } from "@/components/shared/ContractAiAssistant";
+import { ContractProgress } from "@/components/shared/ContractProgress";
 import { useAppStore } from "@/store/useAppStore";
 import { DemoControlPanel } from "@/components/DemoControlPanel";
 const Manager = () => {

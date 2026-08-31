@@ -6,10 +6,10 @@ import { FarmerMobileNav } from "@/components/farmer/FarmerMobileNav";
 import { FarmerProfileView } from "@/components/farmer/ProfileView";
 import { ContractInboxView } from "@/components/farmer/ContractInboxView";
 import { useAppStore } from "@/store/useAppStore";
-import { ContractProgress } from "./ContractProgress";
-import { AiReportView } from "@/components/manager/AiReportView";
+import { ContractProgress } from "../shared/ContractProgress";
+import { AiReportView } from "@/components/shared/AiReportView";
 import { AiChatbot } from "@/components/shared/AiChatbot";
-import { ContractAiAssistant } from "@/components/manager/ContractAiAssistant";
+import { ContractAiAssistant } from "@/components/shared/ContractAiAssistant";
 import { DirectPayoutView } from "./DirectPayoutView";
 import { DemoControlPanel } from "@/components/DemoControlPanel";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -64,7 +64,7 @@ export function FarmerLayout() {
   return (
     <div className="min-h-screen bg-background">
       <FarmerSidebar />
-      <main className="ml-64 min-h-screen p-8">{renderView()}</main>
+      <main className="ml-64 min-h-screen py-12 px-20">{renderView()}</main>
       <AiChatbot />
       <DemoControlPanel />
     </div>
