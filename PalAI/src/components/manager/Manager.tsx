@@ -2,13 +2,13 @@
 
 import { useEffect } from "react";
 import { ManagerSidebar } from "@/components/manager/ManagerSidebar";
-import { ProfileView } from "@/components/manager/ProfileView";
+import { CoopProfile } from "@/components/manager/ProfileView";
 import { ContractInboxView } from "@/components/manager/ContractInboxView";
 import { QuotaAllocationView } from "@/components/manager/QuotaAllocationView";
 import { SmsHubView } from "@/components/manager/SmsHubView";
 import { PayoutView } from "@/components/manager/PayoutView";
 import { AiReportView } from "@/components/manager/AiReportView";
-import { AiChatbot } from "@/components/manager/AiChatbot";
+import { AiChatbot } from "@/components/shared/AiChatbot";
 import { ContractAiAssistant } from "@/components/manager/ContractAiAssistant";
 import { ContractProgress } from "@/components/farmer/ContractProgress";
 import { useAppStore } from "@/store/useAppStore";
@@ -24,7 +24,7 @@ const Manager = () => {
   const renderView = () => {
     switch (activeView) {
       case "profile":
-        return <ProfileView />;
+        return <CoopProfile />;
       case "inbox":
         return <ContractInboxView />;
       case "ai-tracker":
@@ -40,7 +40,7 @@ const Manager = () => {
       case "ai-reports":
         return <AiReportView />;
       default:
-        return <ProfileView />;
+        return <CoopProfile />;
     }
   };
 
