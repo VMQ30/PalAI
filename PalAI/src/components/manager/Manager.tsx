@@ -47,7 +47,7 @@ const Manager = () => {
   return (
     <div className="min-h-screen bg-background">
       <ManagerSidebar />
-      <main className="ml-64 min-h-screen p-8">{renderView()}</main>
+      <main className="ml-64 min-h-screen py-12 px-20">{renderView()}</main>
       <AiChatbot />
       <DemoControlPanel />
     </div>

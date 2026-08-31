@@ -32,6 +32,7 @@ export function CoopProfile() {
     coop.totalHectares.toString(),
   );
   const [soilType, setSoilType] = useState("Loam / Clay Loam");
+  const cropHistory = useAppStore((s) => s.cropHistory);
 
   return (
     <>
@@ -47,6 +48,7 @@ export function CoopProfile() {
         userRole="Cooperative"
         soilScore={coop.soilScore}
         weatherScore={coop.weatherScore}
+        cropHistory={cropHistory}
       />
       <FarmRegistry coop={coop} />
     </>
