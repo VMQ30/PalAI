@@ -159,6 +159,13 @@ interface AppState {
   users: User[]; // For syncing Farmer smsStatus with useStore users
   farmPlots: FarmPlot[]; // For syncing Farmer smsStatus with useStore farmPlots
   broadcastMessages: BroadcastMessage[];
+  activePersona: string;
+
+  switchPersona: (persona: string) => void;
+  allocateQuota: (contractId: string, farmerIds: string[]) => void;
+  broadcastSMS: (contractId: string) => void;
+  distributeFunds: (contractId: string) => void;
+  updateUserSmsStatus: (userId: string, status: string) => void;
 
   confirmAllocation: (contractId: string) => void;
   addBroadcastMessage: (text: string) => void;
@@ -668,12 +675,40 @@ export const useAppStore = create<AppState>((set, get) => ({
   soloFarmers: mockSoloFarmers,
   activeView: "dashboard",
   selectedContractId: null,
-  confirmedAllocations: JSON.parse(
-    localStorage.getItem("confirmedAllocations") || "[]",
-  ),
+  confirmedAllocations: typeof window !== "undefined"
+    ? JSON.parse(localStorage.getItem("confirmedAllocations") || "[]")
+    : [],
   users: [], // Initialize as empty; will sync with useStore for smsStatus
   broadcastMessages: [],
   farmPlots: [], // Initialize as empty; will sync with useStore for smsStatus
+  activePersona: "buyer",
+
+  switchPersona: (persona) => set({ activePersona: persona }),
+  allocateQuota: (contractId) => {
+    const { confirmedAllocations } = get();
+    if (confirmedAllocations.includes(contractId)) return;
+    const next = [...confirmedAllocations, contractId];
+    localStorage.setItem("confirmedAllocations", JSON.stringify(next));
+    set({ confirmedAllocations: next });
+  },
+  broadcastSMS: (contractId) => {
+    const msgText = "Broadcast notification sent to assigned farmers.";
+    get().addBroadcastMessage(msgText);
+  },
+  distributeFunds: (contractId) => {
+    set((s) => ({
+      contracts: s.contracts.map((c) =>
+        c.id === contractId
+          ? { ...c, status: "completed" as ContractStatus, progress: 100 }
+          : c,
+      ),
+    }));
+  },
+  updateUserSmsStatus: (userId, status) => {
+    set((s) => ({
+      users: s.users.map((u) => (u.id === userId ? { ...u, smsStatus: status as any } : u)),
+    }));
+  },
 
   confirmAllocation: (contractId) => {
     const { confirmedAllocations } = get();

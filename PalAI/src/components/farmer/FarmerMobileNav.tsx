@@ -1,5 +1,7 @@
+"use client";
+
 import { Menu, X, Sprout, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/useAppStore";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -31,7 +33,7 @@ export function FarmerMobileNav({
 }: FarmerMobileNavProps) {
   const activeView = useAppStore((s) => s.activeView);
   const setActiveView = useAppStore((s) => s.setActiveView);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleNavItemClick = (viewId: string) => {
     setActiveView(viewId);
@@ -41,7 +43,7 @@ export function FarmerMobileNav({
   const handleLogout = () => {
     localStorage.removeItem("palai_user_role");
     onNavClick();
-    navigate("/");
+    router.push("/");
   };
 
   return (

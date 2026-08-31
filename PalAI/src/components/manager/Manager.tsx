@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from "react";
 import { ManagerSidebar } from "@/components/manager/ManagerSidebar";
 import { ProfileView } from "@/components/manager/ProfileView";
@@ -10,7 +12,7 @@ import { AiChatbot } from "@/components/manager/AiChatbot";
 import { ContractAiAssistant } from "@/components/manager/ContractAiAssistant";
 import { ContractProgress } from "@/components/farmer/ContractProgress";
 import { useAppStore } from "@/store/useAppStore";
-import { DemoControlPanel } from "@/components/DemoControlPanel.tsx";
+import { DemoControlPanel } from "@/components/DemoControlPanel";
 const Manager = () => {
   const activeView = useAppStore((s) => s.activeView);
   const setActiveView = useAppStore((s) => s.setActiveView);

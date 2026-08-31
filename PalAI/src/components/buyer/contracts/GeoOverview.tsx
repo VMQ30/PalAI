@@ -1,3 +1,5 @@
+"use client";
+
 import { useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { MapPin, Leaf } from "lucide-react";
@@ -6,7 +8,7 @@ import Map, { Source, Layer } from "react-map-gl/maplibre";
 import { FeatureCollection } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 
-const MAPTILER_KEY = import.meta.env.VITE_MAPTILER_KEY;
+const MAPTILER_KEY = process.env.NEXT_PUBLIC_MAPTILER_KEY || (typeof process !== "undefined" ? process.env.VITE_MAPTILER_KEY : "");
 const MAP_STYLE = `https://api.maptiler.com/maps/satellite/style.json?key=${MAPTILER_KEY}`;
 const TERRAIN_URL = `https://api.maptiler.com/tiles/terrain-rgb-v2/tiles.json?key=${MAPTILER_KEY}`;
 

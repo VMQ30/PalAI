@@ -1,4 +1,6 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/useAppStore";
 import {
   User,
@@ -23,12 +25,12 @@ const navItems = [
 export function FarmerSidebar() {
   const activeView = useAppStore((s) => s.activeView);
   const setActiveView = useAppStore((s) => s.setActiveView);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   // Reusable logout function
   const handleLogout = () => {
     localStorage.removeItem("palai_user_role");
-    navigate("/");
+    router.push("/");
   };
 
   return (

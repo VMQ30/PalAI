@@ -1,4 +1,6 @@
-import { useNavigate } from "react-router-dom";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { useAppStore } from "@/store/useAppStore";
 import {
   LayoutDashboard,
@@ -19,11 +21,11 @@ const navItems = [
 
 export function BuyerSidebar() {
   const { activeView, setActiveView } = useAppStore();
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleLogout = () => {
     localStorage.removeItem("palai_user_role");
-    navigate("/");
+    router.push("/");
   };
 
   return (

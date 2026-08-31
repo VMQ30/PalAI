@@ -624,7 +624,7 @@ export function ContractProgress() {
 
   const handleSubmit = (step: MilestoneStep, photoFileName: string | null) => {
     if (!selectedId) return;
-    submitMilestoneEvidence(selectedId, step.status, photoFileName);
+    submitMilestoneEvidence(selectedId, step.status, photoFileName || "");
     toast.success("Evidence submitted!", {
       description: `Waiting for ${selectedContract?.buyerName} to co-confirm. Escrow stays locked until then.`,
       duration: 5000,
